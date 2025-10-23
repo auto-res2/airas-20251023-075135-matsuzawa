@@ -33,17 +33,20 @@ def _build_transforms(transform_cfgs: List[dict]):
 # -----------------------------------------------------------------------------
 
 def get_dataloaders(cfg, batch_size: Optional[int] = None) -> Tuple[DataLoader, DataLoader, DataLoader]:
-    bs = batch_size or int(cfg.training.batch_size)
+    if batch_size is not None:
+        bs = batch_size
+    else:
+        bs = int(cfg.run.training.batch_size)
 
-    transform_train = _build_transforms(cfg.dataset.transforms)
+    transform_train = _build_transforms(cfg.run.dataset.transforms)
     # Validation/test – keep only basic preprocessing (ToTensor + Normalize)
-    basic = [d for d in cfg.dataset.transforms if list(d.keys())[0] in ("ToTensor", "Normalize")]
+    basic = [d for d in cfg.run.dataset.transforms if list(d.keys())[0] in ("ToTensor", "Normalize")]
     transform_val = _build_transforms(basic)
 
     full_train = CIFAR10(root=CACHE_DIR, train=True, download=True, transform=transform_train)
     test_ds = CIFAR10(root=CACHE_DIR, train=False, download=True, transform=transform_val)
 
-    val_size = int(cfg.dataset.val_split)
+    val_size = int(cfg.run.dataset.val_split)
     train_size = len(full_train) - val_size
     train_ds, val_ds = random_split(full_train, [train_size, val_size])
 

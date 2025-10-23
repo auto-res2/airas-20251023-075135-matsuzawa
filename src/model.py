@@ -21,7 +21,7 @@ class SmallCNN(nn.Module):
 
     def __init__(self, cfg, dropout: float):
         super().__init__()
-        layers_cfg = cfg.model.conv_layers
+        layers_cfg = cfg.run.model.conv_layers
         layers = []
         in_ch = 3
         for idx, conv_cfg in enumerate(layers_cfg):
@@ -46,7 +46,7 @@ class SmallCNN(nn.Module):
 
         fc_layers = []
         last = feat_dim
-        for fc_cfg in cfg.model.fc_layers:
+        for fc_cfg in cfg.run.model.fc_layers:
             fc_layers.extend(
                 [
                     nn.Linear(last, int(fc_cfg.out_features)),
@@ -65,7 +65,7 @@ class SmallCNN(nn.Module):
 
 
 def build_model(cfg, dropout: float):
-    name = cfg.model.name.lower()
+    name = cfg.run.model.name.lower()
     if name.startswith("small-cnn"):
         return SmallCNN(cfg, dropout)
-    raise ValueError(f"Unknown model {cfg.model.name}")
+    raise ValueError(f"Unknown model {cfg.run.model.name}")

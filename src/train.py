@@ -128,13 +128,13 @@ def _eval_split(
 # -----------------------------------------------------------------------------
 
 def build_objective(cfg, device):
-    beta = float(cfg.method.get("beta", 0.0))
+    beta = float(cfg.run.method.get("beta", 0.0))
 
     def objective(trial: optuna.Trial):
         # Sample hyper-parameters ------------------------------------------------
-        lr = trial.suggest_float("learning_rate", **cfg.optuna.search_space.learning_rate)
-        batch_size = trial.suggest_categorical("batch_size", cfg.optuna.search_space.batch_size.choices)
-        dropout = trial.suggest_float("dropout", **cfg.optuna.search_space.dropout)
+        lr = trial.suggest_float("learning_rate", **cfg.run.optuna.search_space.learning_rate)
+        batch_size = trial.suggest_categorical("batch_size", cfg.run.optuna.search_space.batch_size.choices)
+        dropout = trial.suggest_float("dropout", **cfg.run.optuna.search_space.dropout)
 
         # Data loaders ----------------------------------------------------------
         train_loader, val_loader, _ = get_dataloaders(cfg, batch_size=batch_size)
@@ -145,14 +145,14 @@ def build_objective(cfg, device):
         opt = optim.SGD(
             model.parameters(),
             lr=lr,
-            momentum=cfg.training.momentum,
-            weight_decay=cfg.training.weight_decay,
+            momentum=cfg.run.training.momentum,
+            weight_decay=cfg.run.training.weight_decay,
         )
-        sch = optim.lr_scheduler.CosineAnnealingLR(opt, T_max=cfg.training.epochs)
+        sch = optim.lr_scheduler.CosineAnnealingLR(opt, T_max=cfg.run.training.epochs)
 
         best_val_acc = 0.0
         start_time = time.time()
-        for ep in range(cfg.training.epochs):
+        for ep in range(cfg.run.training.epochs):
             _train_one_epoch(model, train_loader, crit, opt, device, ep, cfg, wdb_run=None)
             _, v_acc = _eval_split(model, val_loader, crit, device, ep, "val", wdb_run=None)
             sch.step()
@@ -161,7 +161,7 @@ def build_objective(cfg, device):
             score = sigmoid_score(v_acc)
             scalar = (
                 compress_curve(score, time.time() - start_time, beta)
-                if cfg.method.name.lower() == "boil-c"
+                if cfg.run.method.name.lower() == "boil-c"
                 else score
             )
             trial.report(scalar, step=ep)
@@ -186,8 +186,8 @@ def main(cfg):  # type: ignore
     OmegaConf.set_struct(cfg, False)
     if cfg.mode == "trial":
         cfg.wandb.mode = "disabled"
-        cfg.optuna.n_trials = 0
-        cfg.training.epochs = 1
+        cfg.run.optuna.n_trials = 0
+        cfg.run.training.epochs = 1
     else:
         cfg.wandb.mode = "online"
 
@@ -217,7 +217,7 @@ def main(cfg):  # type: ignore
     # ------------------------------------------------------------------
     # Reproducibility & device ----------------------------------------
     # ------------------------------------------------------------------
-    set_seed(cfg.method.seeds[0] if "seeds" in cfg.method else 0)
+    set_seed(cfg.run.method.seeds[0] if "seeds" in cfg.run.method else 0)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # ------------------------------------------------------------------
@@ -229,18 +229,18 @@ def main(cfg):  # type: ignore
     # Optuna hyper-parameter tuning -----------------------------------
     # ------------------------------------------------------------------
     best_params = {
-        "learning_rate": float(cfg.training.learning_rate),
-        "batch_size": int(cfg.training.batch_size),
-        "dropout": float(cfg.model.dropout),
+        "learning_rate": float(cfg.run.training.learning_rate),
+        "batch_size": int(cfg.run.training.batch_size),
+        "dropout": float(cfg.run.model.dropout),
     }
 
-    if int(cfg.optuna.n_trials) > 0:
+    if int(cfg.run.optuna.n_trials) > 0:
         study = optuna.create_study(
-            direction=cfg.optuna.direction,
+            direction=cfg.run.optuna.direction,
             sampler=optuna.samplers.TPESampler(seed=0),
             pruner=optuna.pruners.MedianPruner(),
         )
-        study.optimize(build_objective(cfg, device), n_trials=int(cfg.optuna.n_trials))
+        study.optimize(build_objective(cfg, device), n_trials=int(cfg.run.optuna.n_trials))
         best_params.update(study.best_params)
         if wdb_run is not None:
             wdb_run.summary.update({f"optuna/best_{k}": v for k, v in study.best_params.items()})
@@ -254,13 +254,13 @@ def main(cfg):  # type: ignore
     opt = optim.SGD(
         model.parameters(),
         lr=float(best_params["learning_rate"]),
-        momentum=cfg.training.momentum,
-        weight_decay=cfg.training.weight_decay,
+        momentum=cfg.run.training.momentum,
+        weight_decay=cfg.run.training.weight_decay,
     )
-    sch = optim.lr_scheduler.CosineAnnealingLR(opt, T_max=cfg.training.epochs)
+    sch = optim.lr_scheduler.CosineAnnealingLR(opt, T_max=cfg.run.training.epochs)
 
     best_val_acc = 0.0
-    for ep in range(cfg.training.epochs):
+    for ep in range(cfg.run.training.epochs):
         _train_one_epoch(model, train_loader, crit, opt, device, ep, cfg, wdb_run)
         _, v_acc = _eval_split(model, val_loader, crit, device, ep, "val", wdb_run)
         best_val_acc = max(best_val_acc, v_acc)
@@ -269,7 +269,7 @@ def main(cfg):  # type: ignore
     # ------------------------------------------------------------------
     # Final test evaluation & confusion matrix -------------------------
     # ------------------------------------------------------------------
-    test_loss, test_acc = _eval_split(model, test_loader, crit, device, cfg.training.epochs, "test", wdb_run)
+    test_loss, test_acc = _eval_split(model, test_loader, crit, device, cfg.run.training.epochs, "test", wdb_run)
 
     all_preds: List[int] = []
     all_targets: List[int] = []
