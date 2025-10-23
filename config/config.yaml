@@ -1,0 +1,29 @@
+# config/config.yaml
+# Global Hydra configuration.  Each experiment must supply `run=<run_id>` on
+# the command-line so that the corresponding file in config/run/<run_id>.yaml
+# is loaded.
+
+defaults:
+  - _self_
+  - run: ???   # mandatory override – points to config/run/<run_id>.yaml
+
+# ---------------------------------------------------------------------------
+# Global settings (can be overridden from CLI)
+# ---------------------------------------------------------------------------
+mode: full         # full | trial
+results_dir: ./results
+trial_limited_batches: 2  # how many batches to run in trial mode
+
+wandb:
+  entity: gengaru617-personal
+  project: 251023-test
+  mode: online   # switched to "disabled" automatically when mode=trial
+
+# Empty placeholders so OmegaConf structure is defined before composition
+run: {}
+method: {}
+model: {}
+dataset: {}
+training: {}
+optuna: {}
+resources: {}

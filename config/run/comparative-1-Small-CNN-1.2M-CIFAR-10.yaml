@@ -1,0 +1,79 @@
+run_id: comparative-1-Small-CNN-1.2M-CIFAR-10
+method:
+  name: BOIL
+  type: comparative
+  surrogate:
+    type: gaussian_process
+    kernel: matern52
+    noise: 1e-3
+  acquisition_function: expected_improvement
+  seeds: [0, 1, 2, 3, 4]
+model:
+  name: Small-CNN-1.2M
+  conv_layers:
+    - out_channels: 64
+      kernel_size: 3
+      stride: 1
+      padding: 1
+    - out_channels: 128
+      kernel_size: 3
+      stride: 1
+      padding: 1
+    - out_channels: 256
+      kernel_size: 3
+      stride: 1
+      padding: 1
+    - out_channels: 256
+      kernel_size: 3
+      stride: 1
+      padding: 1
+  fc_layers:
+    - out_features: 512
+  activation: relu
+  dropout: 0.25  # default, will be overridden by Optuna
+  num_parameters: 1200000
+dataset:
+  name: cifar10
+  train_split: 45000
+  val_split: 5000
+  test_split: 10000
+  transforms:
+    - RandomCrop:
+        size: 32
+        padding: 4
+    - RandomHorizontalFlip:
+        p: 0.5
+    - ToTensor: {}
+    - Normalize:
+        mean: [0.4914, 0.4822, 0.4465]
+        std:  [0.2023, 0.1994, 0.2010]
+training:
+  epochs: 200
+  optimizer: sgd
+  momentum: 0.9
+  weight_decay: 5e-4
+  learning_rate: 0.01   # initial guess, tuned by Optuna
+  batch_size: 64        # initial guess, tuned by Optuna
+  lr_schedule: cosine
+  checkpoint_interval_epochs: 1
+resources:
+  gpu_type: A100
+  gpus_per_trial: 1
+  time_budget_hours: 8
+optuna:
+  n_trials: 60
+  sampler: tpe
+  direction: maximize
+  pruner: median
+  search_space:
+    learning_rate:
+      type: loguniform
+      low: 1e-4
+      high: 1e-1
+    batch_size:
+      type: categorical
+      choices: [32, 64, 128]
+    dropout:
+      type: uniform
+      low: 0.0
+      high: 0.5
