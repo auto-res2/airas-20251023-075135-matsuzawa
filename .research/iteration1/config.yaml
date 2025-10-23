@@ -6,12 +6,10 @@ wandb:
   project: 251023-test
   mode: disabled
 run:
-  run_id: proposed-Small-CNN-1.2M-CIFAR-10
+  run_id: comparative-1-Small-CNN-1.2M-CIFAR-10
   method:
-    name: BOIL-C
-    type: proposed
-    beta: 0.25
-    compression_formula: u(x,t) = s(r(x,t); m0,g0) - beta * log(1 + C(x,t))
+    name: BOIL
+    type: comparative
     surrogate:
       type: gaussian_process
       kernel: matern52
