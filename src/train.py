@@ -184,11 +184,15 @@ def main(cfg):  # type: ignore
     if cfg.mode not in ("trial", "full"):
         raise ValueError("mode must be 'trial' or 'full'")
     if cfg.mode == "trial":
+        OmegaConf.set_struct(cfg, False)
         cfg.wandb.mode = "disabled"
         cfg.optuna.n_trials = 0
         cfg.training.epochs = 1
+        OmegaConf.set_struct(cfg, True)
     else:
+        OmegaConf.set_struct(cfg, False)
         cfg.wandb.mode = "online"
+        OmegaConf.set_struct(cfg, True)
 
     # ------------------------------------------------------------------
     # Directories & config snapshot
