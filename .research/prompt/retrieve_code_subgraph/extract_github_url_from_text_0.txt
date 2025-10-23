@@ -1,0 +1,18 @@
+
+LLM Name: gemini-2.5-flash
+Input:
+# Task
+You carefully read the contents of the “Paper Outline” and select one GitHub link from the “GitHub URLs List” that you think is most relevant to the contents.
+# Constraints
+- Output the index number corresponding to the selected GitHub URL.
+- Be sure to select only one GitHub URL.
+- If there is no related GitHub link, output None.
+# Paper Outline
+The BOIL framework models the cost-sensitive black-box objective function f(x,t) (hyperparameter x and iterations t) as a Gaussian Process (GP) with a product kernel combining similarities over parameter and iteration space. Training time cost c(x,t) is approximated by a linear regressor. It uses a modified Expected Improvement acquisition function that balances high function value, high uncertainty, and low cost. A key component is training curve compression, where the entire learning curve r(·|x,t) is transformed into a single numeric utility score using a Sigmoid function l(·|m0,g0), whose parameters m0 and g0 are learned by maximizing the GP's log marginal likelihood. To improve sample-efficiency and prevent GP covariance matrix ill-conditioning, a data augmentation technique is used to selectively sample a subset of points from the observed learning curve, focusing on areas of high GP predictive uncertainty, rather than including the full curve.
+
+# GitHub URLs List
+['https://github.com/ntienvu/BOIL']
+Output:
+{
+    "index": 0
+}
