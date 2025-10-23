@@ -132,9 +132,13 @@ def build_objective(cfg, device):
 
     def objective(trial: optuna.Trial):
         # Sample hyper-parameters ------------------------------------------------
-        lr = trial.suggest_float("learning_rate", **cfg.run.optuna.search_space.learning_rate)
+        lr_params = dict(cfg.run.optuna.search_space.learning_rate)
+        lr_log = lr_params.pop("type", None) == "loguniform"
+        lr = trial.suggest_float("learning_rate", log=lr_log, **lr_params)
         batch_size = trial.suggest_categorical("batch_size", cfg.run.optuna.search_space.batch_size.choices)
-        dropout = trial.suggest_float("dropout", **cfg.run.optuna.search_space.dropout)
+        dropout_params = dict(cfg.run.optuna.search_space.dropout)
+        dropout_params.pop("type", None)
+        dropout = trial.suggest_float("dropout", **dropout_params)
 
         # Data loaders ----------------------------------------------------------
         train_loader, val_loader, _ = get_dataloaders(cfg, batch_size=batch_size)

@@ -1,10 +1,10 @@
-mode: trial
+mode: full
 results_dir: .research/iteration1
 trial_limited_batches: 2
 wandb:
   entity: gengaru617-personal
   project: 251023-test
-  mode: disabled
+  mode: online
 run:
   run_id: comparative-1-Small-CNN-1.2M-CIFAR-10
   method:
@@ -67,7 +67,7 @@ run:
         - 0.1994
         - 0.201
   training:
-    epochs: 1
+    epochs: 200
     optimizer: sgd
     momentum: 0.9
     weight_decay: 0.0005
@@ -80,7 +80,7 @@ run:
     gpus_per_trial: 1
     time_budget_hours: 8
   optuna:
-    n_trials: 0
+    n_trials: 60
     sampler: tpe
     direction: maximize
     pruner: median
