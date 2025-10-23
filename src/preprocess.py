@@ -9,6 +9,7 @@ import torch
 import torchvision.transforms as T
 from torch.utils.data import DataLoader, random_split
 from torchvision.datasets import CIFAR10
+from omegaconf import DictConfig, ListConfig
 
 CACHE_DIR = ".cache/"
 
@@ -19,12 +20,13 @@ CACHE_DIR = ".cache/"
 def _build_transforms(transform_cfgs: List[dict]):
     tfms: List[T.transforms.Compose] = []
     for cfg in transform_cfgs:
-        if not isinstance(cfg, dict):
+        if isinstance(cfg, (DictConfig, dict)):
+            name, params = list(cfg.items())[0]
+            params = params or {}
+            cls = getattr(T, name)
+            tfms.append(cls(**params))
+        else:
             raise ValueError("Each transform entry must be a dict {Name: params}")
-        name, params = list(cfg.items())[0]
-        params = params or {}
-        cls = getattr(T, name)
-        tfms.append(cls(**params))
     return T.Compose(tfms)
 
 
