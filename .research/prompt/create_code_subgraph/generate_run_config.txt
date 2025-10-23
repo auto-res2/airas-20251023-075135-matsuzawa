@@ -1,0 +1,114 @@
+
+LLM Name: o3-2025-04-16
+Input:
+You are an AI research assistant tasked with generating Hydra configuration files for experiment runs.
+
+# Task
+Generate individual YAML configuration files for each experiment run. These configs will be used by Hydra to configure specific experimental variations.
+
+# Input Information
+
+## Research Method
+{
+    "Open Problems": "BOIL transforms every partial learning curve into a single scalar via a fixed-shape sigmoid. The score is independent of how much compute was spent to obtain the curve: a run that reaches 90% accuracy after 200 epochs receives the same utility as one that reaches 90% in 20 epochs. Consequently BOIL may keep sampling hyper-parameters that learn slowly but ultimately perform well, wasting wall-clock time.",
+    "Methods": "Cost–Aware Learning-Curve Compression (BOIL-C).\nModification (one line change in the compression routine):\n    u(x,t) = s( r(x,t); m0,g0 )  –  β · log( 1 + C(x,t) )\nwhere\n• s(·) is BOIL’s original sigmoid compression,  \n• C(x,t)=∑_{i=1}^{t} c(x,i) is the cumulative observed training cost (in seconds),\n• β∈[0,1] is a small constant or learned alongside m0,g0 by marginal-likelihood maximisation.\n\nInterpretation: we keep BOIL’s performance-based score but subtract a logarithmic penalty that grows with consumed compute, favouring hyper-params that reach good scores quickly.  Only the single scalar fed to the GP changes; the surrogate, acquisition function and optimisation loop are untouched.",
+    "Experimental Setup": "Datasets: CIFAR-10 image classification with a small CNN; CartPole-v0 reinforcement learning with DQN (same as BOIL).\nHyper-parameters to tune: learning-rate, batch-size, and dropout for CNN; lr and target-update for DQN.\nMethods compared:\n1) BOIL (original)\n2) BOIL-C (ours, β=0.25)\n3) Hyperband (strong cost-aware baseline)\nBudget: 8 GPU hours per method, 5 independent seeds.\nMetric: best validation accuracy (CNN) / average return (RL) reached versus wall-clock time.  Report area-under-curve (AUC) of best-so-far metric w.r.t. time.",
+    "Experimental Code": "# --- key modification only ----------------------------------------------------\nimport numpy as np\nfrom scipy.optimize import minimize\n\n# inside BOIL class, replace original compression -----------------------------\n\ndef compress_curve(sigmoid_score, cumulative_cost, beta=0.25):\n    \"\"\"Return cost-aware scalar for GP.  Inputs are scalars.\"\"\"\n    return sigmoid_score - beta * np.log1p(cumulative_cost)\n\n# example usage ---------------------------------------------------------------\n# r_t: current accuracy at epoch t, m0,g0 learned as in BOIL\nsigmoid_score = 1 / (1 + np.exp(-(r_t - m0)/g0))\nscalar_for_gp = compress_curve(sigmoid_score, cumulative_cost)\n# everything else in BOIL (GP update, acquisition, etc.) stays unchanged.",
+    "Expected Result": "Across both tasks BOIL-C achieves the same final accuracy/return as BOIL but reaches it 30-40% faster in wall-clock time.  The AUC-time metric improves by ≈25% over BOIL and is on par or slightly better than Hyperband, while requiring far fewer total runs.",
+    "Expected Conclusion": "Penalising training cost directly in the learning-curve compression gives BOIL the missing notion of time-efficiency with just one extra term.  The change is trivial to implement (one extra subtraction) yet shifts the search toward hyper-parameters that learn quickly, saving compute without sacrificing quality.  This demonstrates how a minimal, well-motivated modification can translate into meaningful practical gains for hyper-parameter optimisation."
+}
+
+## Experimental Design
+{'experiment_summary': 'Purpose: Demonstrate that the proposed Cost-Aware Learning-Curve Compression (BOIL-C) accelerates Bayesian Optimisation for Hyper-parameter Tuning without hurting final performance.\n\nComponents & workflow:\n1. Task: Image classification on CIFAR-10 with a 4-layer convolutional neural network (~1.2 M params).\n2. Hyper-parameter search space: learning-rate, batch-size, dropout.\n3. Methods: (a) BOIL-C (proposed) – modifies BOIL’s scalar learning-curve compression with a log-cost penalty; (b) BOIL (original) – comparative baseline.\n4. Each optimiser receives an identical budget of 8 physical GPU-hours and is run with 5 independent random seeds. During the search every partial training curve of the CNN is compressed to a scalar and fed to a Gaussian-process surrogate; the acquisition function chooses the next configuration.\n5. Hardware: single NVIDIA A100; multiple seeds run in parallel across the 8 available GPUs to exhaust the budget efficiently.\n6. Logging: For every wall-clock second we record the best-so-far validation accuracy; these traces are later integrated to obtain the AUC-Time metric.\n7. Evaluation: Compare (i) AUC of best validation-accuracy versus time, and (ii) final validation accuracy at budget exhaustion.\n\nOverall, the experiment quantifies how much faster BOIL-C reaches high accuracy relative to BOIL while maintaining the same final score.', 'evaluation_metrics': ['AUC_Time (Best Accuracy vs Wall-Clock Time)', 'Final Validation Accuracy'], 'proposed_method': 'BOIL-C augments BOIL’s learning-curve compression with a cost term. For a run x after observing t training checkpoints we compute:\n    u(x,t) = s(r(x,t); m0,g0) – β · log(1 + C(x,t))\nwhere s(·) is BOIL’s sigmoid of the current validation accuracy r(x,t), C(x,t) is the cumulative training cost in seconds, and β∈[0,1] (fixed to 0.25 in the main experiment). Only this scalar fed to the Gaussian-process surrogate changes; GP training, acquisition optimisation (e.g., Expected Improvement), and the outer BO loop remain untouched. The subtraction biases the search toward configurations that obtain high accuracy rapidly, thereby reducing wall-clock time consumption. Implementation requires adding one line in the compression routine:\n    scalar = sigmoid_score – beta * np.log1p(cumulative_cost)', 'comparative_methods': ['BOIL (Original)'], 'models_to_use': ['Small-CNN-1.2M'], 'datasets_to_use': ['CIFAR-10'], 'hyperparameters_to_search': {'learning_rate': '0.0001-0.1', 'batch_size': '32,64,128', 'dropout': '0.0-0.5'}, 'external_resources': {'hugging_face': {'models': [], 'datasets': [{'id': 'uoft-cs/cifar10', 'author': 'uoft-cs', 'sha': '0b2714987fa478483af9968de7c934580d0bb9a2', 'created_at': datetime.datetime(2022, 3, 2, 23, 29, 22, tzinfo=TzInfo(UTC)), 'last_modified': datetime.datetime(2024, 1, 4, 6, 53, 11, tzinfo=TzInfo(UTC)), 'private': False, 'gated': False, 'disabled': False, 'downloads': 77515, 'likes': 87, 'siblings': [{'rfilename': '.gitattributes', 'size': None, 'blob_id': None, 'lfs': None}, {'rfilename': 'README.md', 'size': None, 'blob_id': None, 'lfs': None}, {'rfilename': 'plain_text/test-00000-of-00001.parquet', 'size': None, 'blob_id': None, 'lfs': None}, {'rfilename': 'plain_text/train-00000-of-00001.parquet', 'size': None, 'blob_id': None, 'lfs': None}], 'card_data': {'license': ['unknown'], 'language': ['en'], 'library_name': None, 'pipeline_tag': None, 'tags': [], 'datasets': [], 'model_type': None, 'base_model': None, 'task_categories': ['image-classification'], 'size_categories': ['10K<n<100K'], 'metrics': [], 'widget': []}, 'tags': ['task_categories:image-classification', 'annotations_creators:crowdsourced', 'language_creators:found', 'multilinguality:monolingual', 'source_datasets:extended|other-80-Million-Tiny-Images', 'language:en', 'license:unknown', 'size_categories:10K<n<100K', 'format:parquet', 'modality:image', 'library:datasets', 'library:pandas', 'library:mlcroissant', 'library:polars', 'region:us'], 'pipeline_tag': None, 'library_name': None, 'readme': '---\nannotations_creators:\n- crowdsourced\nlanguage_creators:\n- found\nlanguage:\n- en\nlicense:\n- unknown\nmultilinguality:\n- monolingual\nsize_categories:\n- 10K<n<100K\nsource_datasets:\n- extended|other-80-Million-Tiny-Images\ntask_categories:\n- image-classification\ntask_ids: []\npaperswithcode_id: cifar-10\npretty_name: Cifar10\ndataset_info:\n  config_name: plain_text\n  features:\n  - name: img\n    dtype: image\n  - name: label\n    dtype:\n      class_label:\n        names:\n          \'0\': airplane\n          \'1\': automobile\n          \'2\': bird\n          \'3\': cat\n          \'4\': deer\n          \'5\': dog\n          \'6\': frog\n          \'7\': horse\n          \'8\': ship\n          \'9\': truck\n  splits:\n  - name: train\n    num_bytes: 113648310.0\n    num_examples: 50000\n  - name: test\n    num_bytes: 22731580.0\n    num_examples: 10000\n  download_size: 143646105\n  dataset_size: 136379890.0\nconfigs:\n- config_name: plain_text\n  data_files:\n  - split: train\n    path: plain_text/train-*\n  - split: test\n    path: plain_text/test-*\n  default: true\n---\n\n# Dataset Card for CIFAR-10\n\n## Table of Contents\n- [Dataset Description](#dataset-description)\n  - [Dataset Summary](#dataset-summary)\n  - [Supported Tasks and Leaderboards](#supported-tasks-and-leaderboards)\n  - [Languages](#languages)\n- [Dataset Structure](#dataset-structure)\n  - [Data Instances](#data-instances)\n  - [Data Fields](#data-fields)\n  - [Data Splits](#data-splits)\n- [Dataset Creation](#dataset-creation)\n  - [Curation Rationale](#curation-rationale)\n  - [Source Data](#source-data)\n  - [Annotations](#annotations)\n  - [Personal and Sensitive Information](#personal-and-sensitive-information)\n- [Considerations for Using the Data](#considerations-for-using-the-data)\n  - [Social Impact of Dataset](#social-impact-of-dataset)\n  - [Discussion of Biases](#discussion-of-biases)\n  - [Other Known Limitations](#other-known-limitations)\n- [Additional Information](#additional-information)\n  - [Dataset Curators](#dataset-curators)\n  - [Licensing Information](#licensing-information)\n  - [Citation Information](#citation-information)\n  - [Contributions](#contributions)\n\n## Dataset Description\n\n- **Homepage:** https://www.cs.toronto.edu/~kriz/cifar.html\n- **Repository:** \n- **Paper:** Learning Multiple Layers of Features from Tiny Images by Alex Krizhevsky\n- **Leaderboard:**\n- **Point of Contact:**\n\n### Dataset Summary\n\nThe CIFAR-10 dataset consists of 60000 32x32 colour images in 10 classes, with 6000 images per class. There are 50000 training images and 10000 test images.\nThe dataset is divided into five training batches and one test batch, each with 10000 images. The test batch contains exactly 1000 randomly-selected images from each class. The training batches contain the remaining images in random order, but some training batches may contain more images from one class than another. Between them, the training batches contain exactly 5000 images from each class.\n\n### Supported Tasks and Leaderboards\n\n- `image-classification`: The goal of this task is to classify a given image into one of 10 classes. The leaderboard is available [here](https://paperswithcode.com/sota/image-classification-on-cifar-10).\n\n### Languages\n\nEnglish\n\n## Dataset Structure\n\n### Data Instances\n\nA sample from the training set is provided below:\n\n```\n{\n  \'img\': <PIL.PngImagePlugin.PngImageFile image mode=RGB size=32x32 at 0x201FA6EE748>,\n  \'label\': 0\n}\n```\n\n### Data Fields\n\n- img: A `PIL.Image.Image` object containing the 32x32 image. Note that when accessing the image column: `dataset[0]["image"]` the image file is automatically decoded. Decoding of a large number of image files might take a significant amount of time. Thus it is important to first query the sample index before the `"image"` column, *i.e.* `dataset[0]["image"]` should **always** be preferred over `dataset["image"][0]`\n- label: 0-9 with the following correspondence\n         0 airplane\n         1 automobile\n         2 bird\n         3 cat\n         4 deer\n         5 dog\n         6 frog\n         7 horse\n         8 ship\n         9 truck\n\n### Data Splits\n\nTrain and Test\n\n## Dataset Creation\n\n### Curation Rationale\n\n[More Information Needed]\n\n### Source Data\n\n#### Initial Data Collection and Normalization\n\n[More Information Needed]\n\n#### Who are the source language producers?\n\n[More Information Needed]\n\n### Annotations\n\n#### Annotation process\n\n[More Information Needed]\n\n#### Who are the annotators?\n\n[More Information Needed]\n\n### Personal and Sensitive Information\n\n[More Information Needed]\n\n## Considerations for Using the Data\n\n### Social Impact of Dataset\n\n[More Information Needed]\n\n### Discussion of Biases\n\n[More Information Needed]\n\n### Other Known Limitations\n\n[More Information Needed]\n\n## Additional Information\n\n### Dataset Curators\n\n[More Information Needed]\n\n### Licensing Information\n\n[More Information Needed]\n\n### Citation Information\n\n```\n@TECHREPORT{Krizhevsky09learningmultiple,\n    author = {Alex Krizhevsky},\n    title = {Learning multiple layers of features from tiny images},\n    institution = {},\n    year = {2009}\n}\n```\n\n### Contributions\n\nThanks to [@czabo](https://github.com/czabo) for adding this dataset.', 'model_index': None, 'widget_data': None, 'config': None, 'transformers_info': None, 'spaces': None, 'safetensors': None, 'used_storage': None, 'extracted_code': ''}]}}, 'experiment_code': None}
+
+## Experiment Runs
+
+- Run ID: proposed-Small-CNN-1.2M-CIFAR-10
+  Method: proposed
+  Model: Small-CNN-1.2M
+  Dataset: CIFAR-10
+
+- Run ID: comparative-1-Small-CNN-1.2M-CIFAR-10
+  Method: comparative-1
+  Model: Small-CNN-1.2M
+  Dataset: CIFAR-10
+
+
+# Requirements
+
+## Configuration Structure
+Each run configuration should include:
+- run_id: Unique identifier for this run
+- method: The method name (baseline, proposed, ablation, etc.)
+- model: Model-specific parameters (name, architecture details, hyperparameters)
+- dataset: Dataset-specific parameters (name, preprocessing settings, split ratios)
+- training: Training hyperparameters (learning rate, batch size, epochs, optimizer settings)
+- optuna: Hyperparameter search space definition for Optuna optimization
+  - Define search spaces for key hyperparameters using Optuna's suggest methods
+  - Example: learning_rate: [1e-5, 1e-3], batch_size: [16, 32, 64]
+- Any other experiment-specific settings
+
+## Format
+- Generate one YAML configuration per experiment run
+- Ensure valid YAML syntax
+- Use meaningful parameter values based on the research method and experimental design
+
+## Example Configuration
+```yaml
+run_id: baseline_bert_imdb
+method: baseline
+model:
+  name: bert-base-uncased
+  hidden_size: 768
+  num_layers: 12
+dataset:
+  name: imdb
+  max_length: 512
+  batch_size: 32
+training:
+  learning_rate: 2e-5
+  epochs: 3
+  optimizer: adamw
+  warmup_steps: 500
+optuna:
+  n_trials: 20
+  search_space:
+    learning_rate:
+      type: loguniform
+      low: 1e-5
+      high: 1e-3
+    batch_size:
+      type: categorical
+      choices: [16, 32, 64]
+```
+
+# Experimental Environment
+NVIDIA A100×8
+VRAM：80GB×8
+RAM：2048 GB
+
+# Instructions
+1. Generate one YAML configuration for each experiment run listed above
+2. Ensure configurations reflect the differences between baseline, proposed, and ablation methods
+3. Use appropriate hyperparameters based on the experimental design
+4. Include Optuna search space if hyperparameter optimization is beneficial for the experiment
+5. For Optuna search spaces, use appropriate distribution types:
+   - loguniform: For learning rates, regularization parameters
+   - uniform: For dropout rates, weight decay
+   - int: For hidden dimensions, number of layers
+   - categorical: For discrete choices like batch size, optimizer type
+
+Generate the configurations now:
+Output:
+{
+  "run_configs": [
+    {
+      "run_id": "proposed-Small-CNN-1.2M-CIFAR-10",
+      "run_config_yaml": "run_id: proposed-Small-CNN-1.2M-CIFAR-10\nmethod:\n  name: BOIL-C\n  type: proposed\n  beta: 0.25\n  compression_formula: \"u(x,t) = s(r(x,t); m0,g0) - beta * log(1 + C(x,t))\"\n  surrogate:\n    type: gaussian_process\n    kernel: matern52\n    noise: 1e-3\n  acquisition_function: expected_improvement\n  seeds: [0, 1, 2, 3, 4]\nmodel:\n  name: Small-CNN-1.2M\n  conv_layers:\n    - out_channels: 64\n      kernel_size: 3\n      stride: 1\n      padding: 1\n    - out_channels: 128\n      kernel_size: 3\n      stride: 1\n      padding: 1\n    - out_channels: 256\n      kernel_size: 3\n      stride: 1\n      padding: 1\n    - out_channels: 256\n      kernel_size: 3\n      stride: 1\n      padding: 1\n  fc_layers:\n    - out_features: 512\n  activation: relu\n  dropout: 0.25  # default, will be overridden by Optuna\n  num_parameters: 1200000\ndataset:\n  name: cifar10\n  train_split: 45000\n  val_split: 5000\n  test_split: 10000\n  transforms:\n    - RandomCrop:\n        size: 32\n        padding: 4\n    - RandomHorizontalFlip:\n        p: 0.5\n    - ToTensor: {}\n    - Normalize:\n        mean: [0.4914, 0.4822, 0.4465]\n        std:  [0.2023, 0.1994, 0.2010]\ntraining:\n  epochs: 200\n  optimizer: sgd\n  momentum: 0.9\n  weight_decay: 5e-4\n  learning_rate: 0.01   # initial guess, tuned by Optuna\n  batch_size: 64        # initial guess, tuned by Optuna\n  lr_schedule: cosine\n  checkpoint_interval_epochs: 1\nresources:\n  gpu_type: A100\n  gpus_per_trial: 1\n  time_budget_hours: 8\noptuna:\n  n_trials: 60\n  sampler: tpe\n  direction: maximize\n  pruner: median\n  search_space:\n    learning_rate:\n      type: loguniform\n      low: 1e-4\n      high: 1e-1\n    batch_size:\n      type: categorical\n      choices: [32, 64, 128]\n    dropout:\n      type: uniform\n      low: 0.0\n      high: 0.5\n"
+    },
+    {
+      "run_id": "comparative-1-Small-CNN-1.2M-CIFAR-10",
+      "run_config_yaml": "run_id: comparative-1-Small-CNN-1.2M-CIFAR-10\nmethod:\n  name: BOIL\n  type: comparative\n  surrogate:\n    type: gaussian_process\n    kernel: matern52\n    noise: 1e-3\n  acquisition_function: expected_improvement\n  seeds: [0, 1, 2, 3, 4]\nmodel:\n  name: Small-CNN-1.2M\n  conv_layers:\n    - out_channels: 64\n      kernel_size: 3\n      stride: 1\n      padding: 1\n    - out_channels: 128\n      kernel_size: 3\n      stride: 1\n      padding: 1\n    - out_channels: 256\n      kernel_size: 3\n      stride: 1\n      padding: 1\n    - out_channels: 256\n      kernel_size: 3\n      stride: 1\n      padding: 1\n  fc_layers:\n    - out_features: 512\n  activation: relu\n  dropout: 0.25  # default, will be overridden by Optuna\n  num_parameters: 1200000\ndataset:\n  name: cifar10\n  train_split: 45000\n  val_split: 5000\n  test_split: 10000\n  transforms:\n    - RandomCrop:\n        size: 32\n        padding: 4\n    - RandomHorizontalFlip:\n        p: 0.5\n    - ToTensor: {}\n    - Normalize:\n        mean: [0.4914, 0.4822, 0.4465]\n        std:  [0.2023, 0.1994, 0.2010]\ntraining:\n  epochs: 200\n  optimizer: sgd\n  momentum: 0.9\n  weight_decay: 5e-4\n  learning_rate: 0.01   # initial guess, tuned by Optuna\n  batch_size: 64        # initial guess, tuned by Optuna\n  lr_schedule: cosine\n  checkpoint_interval_epochs: 1\nresources:\n  gpu_type: A100\n  gpus_per_trial: 1\n  time_budget_hours: 8\noptuna:\n  n_trials: 60\n  sampler: tpe\n  direction: maximize\n  pruner: median\n  search_space:\n    learning_rate:\n      type: loguniform\n      low: 1e-4\n      high: 1e-1\n    batch_size:\n      type: categorical\n      choices: [32, 64, 128]\n    dropout:\n      type: uniform\n      low: 0.0\n      high: 0.5\n"
+    }
+  ]
+}
