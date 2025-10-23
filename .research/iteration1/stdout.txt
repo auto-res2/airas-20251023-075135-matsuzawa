@@ -21,3 +21,10 @@ WandB URL: https://wandb.ai/gengaru617-personal/251023-test/runs/comparative-1-S
 [1;34mwandb[0m: 
 [1;34mwandb[0m: 🚀 View run [33mcomparative-1-Small-CNN-1.2M-CIFAR-10[0m at: [34mhttps://wandb.ai/gengaru617-personal/251023-test/runs/comparative-1-Small-CNN-1.2M-CIFAR-10[0m
 [1;34mwandb[0m: Find logs at: [1;35m.research/iteration1/wandb/run-20251023_083917-comparative-1-Small-CNN-1.2M-CIFAR-10/logs[0m
+=== [UV SYNC] Start at Thu Oct 23 08:41:35 AM UTC 2025 ===
+=== [UV SYNC] Finished successfully at Thu Oct 23 08:41:40 AM UTC 2025 ===
+=== [FULL EXPERIMENT] Start for comparative-1-Small-CNN-1.2M-CIFAR-10 at Thu Oct 23 08:41:40 AM UTC 2025 ===
+Launching training subprocess:
+ /home/toma/t-80-8-a/_work/airas-20251023-075135-matsuzawa/airas-20251023-075135-matsuzawa/.venv/bin/python3 -u -m src.train run=comparative-1-Small-CNN-1.2M-CIFAR-10 results_dir=.research/iteration1 mode=full
+WandB URL: https://wandb.ai/gengaru617-personal/251023-test/runs/comparative-1-Small-CNN-1.2M-CIFAR-10
+=== [FULL EXPERIMENT] PASSED for comparative-1-Small-CNN-1.2M-CIFAR-10 at Thu Oct 23 12:35:00 PM UTC 2025 ===

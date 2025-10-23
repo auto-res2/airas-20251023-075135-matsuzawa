@@ -297,3 +297,184 @@ Traceback (most recent call last):
 subprocess.CalledProcessError: Command '['/home/toma/t-80-8-a/_work/airas-20251023-075135-matsuzawa/airas-20251023-075135-matsuzawa/.venv/bin/python3', '-u', '-m', 'src.train', 'run=comparative-1-Small-CNN-1.2M-CIFAR-10', 'results_dir=.research/iteration1', 'mode=full']' returned non-zero exit status 1.
 
 Set the environment variable HYDRA_FULL_ERROR=1 for a complete stack trace.
+Using CPython 3.11.13
+Creating virtual environment at: .venv
+Resolved 101 packages in 158ms
+Installed 74 packages in 4.67s
+ + alembic==1.17.0
+ + annotated-types==0.7.0
+ + antlr4-python3-runtime==4.9.3
+ + boil-c-experiments==0.1.0 (from file:///home/toma/t-80-8-a/_work/airas-20251023-075135-matsuzawa/airas-20251023-075135-matsuzawa)
+ + certifi==2025.10.5
+ + charset-normalizer==3.4.4
+ + click==8.3.0
+ + colorlog==6.10.1
+ + contourpy==1.3.3
+ + cycler==0.12.1
+ + filelock==3.20.0
+ + fonttools==4.60.1
+ + fsspec==2025.9.0
+ + gitdb==4.0.12
+ + gitpython==3.1.45
+ + greenlet==3.2.4
+ + hydra-core==1.3.2
+ + idna==3.11
+ + jinja2==3.1.6
+ + joblib==1.5.2
+ + kiwisolver==1.4.9
+ + mako==1.3.10
+ + markupsafe==3.0.3
+ + matplotlib==3.10.7
+ + mpmath==1.3.0
+ + networkx==3.5
+ + numpy==2.3.4
+ + nvidia-cublas-cu12==12.8.4.1
+ + nvidia-cuda-cupti-cu12==12.8.90
+ + nvidia-cuda-nvrtc-cu12==12.8.93
+ + nvidia-cuda-runtime-cu12==12.8.90
+ + nvidia-cudnn-cu12==9.10.2.21
+ + nvidia-cufft-cu12==11.3.3.83
+ + nvidia-cufile-cu12==1.13.1.3
+ + nvidia-curand-cu12==10.3.9.90
+ + nvidia-cusolver-cu12==11.7.3.90
+ + nvidia-cusparse-cu12==12.5.8.93
+ + nvidia-cusparselt-cu12==0.7.1
+ + nvidia-nccl-cu12==2.27.5
+ + nvidia-nvjitlink-cu12==12.8.93
+ + nvidia-nvshmem-cu12==3.3.20
+ + nvidia-nvtx-cu12==12.8.90
+ + omegaconf==2.3.0
+ + optuna==4.5.0
+ + packaging==25.0
+ + pandas==2.3.3
+ + pillow==12.0.0
+ + platformdirs==4.5.0
+ + protobuf==6.33.0
+ + pydantic==2.12.3
+ + pydantic-core==2.41.4
+ + pyparsing==3.2.5
+ + python-dateutil==2.9.0.post0
+ + pytz==2025.2
+ + pyyaml==6.0.3
+ + requests==2.32.5
+ + scikit-learn==1.7.2
+ + scipy==1.16.2
+ + seaborn==0.13.2
+ + sentry-sdk==2.42.1
+ + six==1.17.0
+ + smmap==5.0.2
+ + sqlalchemy==2.0.44
+ + sympy==1.14.0
+ + threadpoolctl==3.6.0
+ + torch==2.9.0
+ + torchvision==0.24.0
+ + tqdm==4.67.1
+ + triton==3.5.0
+ + typing-extensions==4.15.0
+ + typing-inspection==0.4.2
+ + tzdata==2025.2
+ + urllib3==2.5.0
+ + wandb==0.22.2
+/home/toma/t-80-8-a/_work/airas-20251023-075135-matsuzawa/airas-20251023-075135-matsuzawa/.venv/lib/python3.11/site-packages/pydantic/_internal/_generate_schema.py:2249: UnsupportedFieldAttributeWarning: The 'repr' attribute with value False was provided to the `Field()` function, which has no effect in the context it was used. 'repr' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+  warnings.warn(
+/home/toma/t-80-8-a/_work/airas-20251023-075135-matsuzawa/airas-20251023-075135-matsuzawa/.venv/lib/python3.11/site-packages/pydantic/_internal/_generate_schema.py:2249: UnsupportedFieldAttributeWarning: The 'frozen' attribute with value True was provided to the `Field()` function, which has no effect in the context it was used. 'frozen' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+  warnings.warn(
+wandb: Currently logged in as: gengaru617 (gengaru617-personal) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run comparative-1-Small-CNN-1.2M-CIFAR-10
+wandb: Tracking run with wandb version 0.22.2
+wandb: Run data is saved locally in /home/toma/t-80-8-a/_work/airas-20251023-075135-matsuzawa/airas-20251023-075135-matsuzawa/.research/iteration1/wandb/run-20251023_084201-comparative-1-Small-CNN-1.2M-CIFAR-10
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Resuming run comparative-1-Small-CNN-1.2M-CIFAR-10
+wandb: ⭐️ View project at https://wandb.ai/gengaru617-personal/251023-test
+wandb: 🚀 View run at https://wandb.ai/gengaru617-personal/251023-test/runs/comparative-1-Small-CNN-1.2M-CIFAR-10
+  0%|          | 0.00/170M [00:00<?, ?B/s]  0%|          | 32.8k/170M [00:00<14:29, 196kB/s]  0%|          | 65.5k/170M [00:00<14:29, 196kB/s]  0%|          | 98.3k/170M [00:00<14:23, 197kB/s]  0%|          | 229k/170M [00:00<06:36, 429kB/s]   0%|          | 459k/170M [00:00<03:40, 771kB/s]  1%|          | 918k/170M [00:01<01:57, 1.44MB/s]  1%|          | 1.84M/170M [00:01<01:01, 2.76MB/s]  2%|▏         | 3.70M/170M [00:01<00:30, 5.44MB/s]  4%|▎         | 6.36M/170M [00:01<00:18, 8.69MB/s]  6%|▌         | 9.47M/170M [00:01<00:13, 11.7MB/s]  7%|▋         | 12.6M/170M [00:01<00:11, 13.8MB/s]  9%|▉         | 15.7M/170M [00:02<00:10, 15.3MB/s] 11%|█         | 18.9M/170M [00:02<00:09, 16.3MB/s] 13%|█▎        | 22.0M/170M [00:02<00:08, 16.9MB/s] 15%|█▍        | 25.1M/170M [00:02<00:08, 17.4MB/s] 17%|█▋        | 28.2M/170M [00:02<00:08, 17.1MB/s] 18%|█▊        | 31.2M/170M [00:02<00:08, 17.3MB/s] 20%|██        | 34.4M/170M [00:03<00:07, 17.6MB/s] 22%|██▏       | 37.5M/170M [00:03<00:07, 17.9MB/s] 24%|██▍       | 40.6M/170M [00:03<00:07, 18.1MB/s] 26%|██▌       | 43.7M/170M [00:03<00:07, 18.0MB/s] 28%|██▊       | 46.9M/170M [00:03<00:06, 18.2MB/s] 29%|██▉       | 50.0M/170M [00:03<00:06, 18.3MB/s] 31%|███       | 53.2M/170M [00:04<00:06, 18.3MB/s] 33%|███▎      | 56.3M/170M [00:04<00:06, 18.1MB/s] 35%|███▍      | 59.4M/170M [00:04<00:06, 18.1MB/s] 37%|███▋      | 62.5M/170M [00:04<00:05, 18.1MB/s] 39%|███▊      | 65.7M/170M [00:04<00:05, 18.3MB/s] 40%|████      | 68.8M/170M [00:04<00:05, 18.4MB/s] 42%|████▏     | 71.9M/170M [00:05<00:05, 18.4MB/s] 44%|████▍     | 75.0M/170M [00:05<00:05, 18.0MB/s] 46%|████▌     | 78.2M/170M [00:05<00:05, 18.2MB/s] 48%|████▊     | 81.3M/170M [00:05<00:04, 18.3MB/s] 50%|████▉     | 84.4M/170M [00:05<00:04, 18.2MB/s] 51%|█████▏    | 87.5M/170M [00:05<00:04, 18.3MB/s] 53%|█████▎    | 90.7M/170M [00:06<00:04, 18.3MB/s] 55%|█████▍    | 93.7M/170M [00:06<00:04, 17.9MB/s] 57%|█████▋    | 96.7M/170M [00:06<00:04, 17.8MB/s] 59%|█████▊    | 99.8M/170M [00:06<00:03, 18.0MB/s] 60%|██████    | 103M/170M [00:06<00:03, 18.1MB/s]  62%|██████▏   | 106M/170M [00:06<00:03, 18.2MB/s] 64%|██████▍   | 109M/170M [00:07<00:03, 18.3MB/s] 66%|██████▌   | 112M/170M [00:07<00:03, 18.4MB/s] 68%|██████▊   | 115M/170M [00:07<00:02, 18.5MB/s] 69%|██████▉   | 118M/170M [00:07<00:02, 18.4MB/s] 71%|███████▏  | 122M/170M [00:07<00:02, 18.1MB/s] 73%|███████▎  | 125M/170M [00:07<00:02, 18.7MB/s] 75%|███████▌  | 128M/170M [00:08<00:02, 18.4MB/s] 77%|███████▋  | 131M/170M [00:08<00:02, 19.1MB/s] 79%|███████▊  | 134M/170M [00:08<00:01, 18.4MB/s] 81%|████████  | 137M/170M [00:08<00:01, 18.7MB/s] 82%|████████▏ | 140M/170M [00:08<00:01, 18.9MB/s] 84%|████████▍ | 143M/170M [00:08<00:01, 21.0MB/s] 85%|████████▌ | 145M/170M [00:09<00:01, 19.0MB/s] 87%|████████▋ | 147M/170M [00:09<00:01, 17.0MB/s] 88%|████████▊ | 150M/170M [00:09<00:01, 17.8MB/s] 90%|████████▉ | 153M/170M [00:09<00:00, 20.7MB/s] 91%|█████████ | 155M/170M [00:09<00:00, 18.6MB/s] 92%|█████████▏| 157M/170M [00:09<00:00, 16.7MB/s] 93%|█████████▎| 159M/170M [00:09<00:00, 17.8MB/s] 95%|█████████▍| 162M/170M [00:09<00:00, 19.3MB/s] 96%|█████████▌| 164M/170M [00:10<00:00, 17.3MB/s] 97%|█████████▋| 166M/170M [00:10<00:00, 17.8MB/s] 99%|█████████▊| 168M/170M [00:10<00:00, 20.2MB/s]100%|█████████▉| 170M/170M [00:10<00:00, 17.7MB/s]100%|██████████| 170M/170M [00:10<00:00, 16.3MB/s]
+[I 2025-10-23 08:42:20,647] A new study created in memory with name: no-name-44e7ac6f-48bc-4eac-a752-fa3d03d3390d
+[I 2025-10-23 09:12:15,403] Trial 0 finished with value: 0.9226 and parameters: {'learning_rate': 0.004430375245218269, 'batch_size': 32, 'dropout': 0.21182739966945235}. Best is trial 0 with value: 0.9226.
+[I 2025-10-23 09:39:03,239] Trial 1 finished with value: 0.9202 and parameters: {'learning_rate': 0.008663279761354562, 'batch_size': 128, 'dropout': 0.19172075941288885}. Best is trial 0 with value: 0.9226.
+[I 2025-10-23 10:05:49,473] Trial 2 finished with value: 0.9198 and parameters: {'learning_rate': 0.02372330072992195, 'batch_size': 128, 'dropout': 0.03551802909894347}. Best is trial 0 with value: 0.9226.
+[I 2025-10-23 10:33:07,165] Trial 3 finished with value: 0.8764 and parameters: {'learning_rate': 0.00018255254802399022, 'batch_size': 64, 'dropout': 0.4350060741234096}. Best is trial 0 with value: 0.9226.
+[I 2025-10-23 11:03:24,835] Trial 4 finished with value: 0.7398 and parameters: {'learning_rate': 0.08626905220714905, 'batch_size': 32, 'dropout': 0.05913721293446661}. Best is trial 0 with value: 0.9226.
+[I 2025-10-23 11:03:51,492] Trial 5 pruned. 
+[I 2025-10-23 11:05:05,848] Trial 6 pruned. 
+[I 2025-10-23 11:06:12,308] Trial 7 pruned. 
+[I 2025-10-23 11:06:55,220] Trial 8 pruned. 
+[I 2025-10-23 11:07:37,569] Trial 9 pruned. 
+[I 2025-10-23 11:08:23,871] Trial 10 pruned. 
+[I 2025-10-23 11:08:34,144] Trial 11 pruned. 
+[I 2025-10-23 11:09:00,327] Trial 12 pruned. 
+[I 2025-10-23 11:09:11,571] Trial 13 pruned. 
+[I 2025-10-23 11:09:53,730] Trial 14 pruned. 
+[I 2025-10-23 11:11:08,777] Trial 15 pruned. 
+[I 2025-10-23 11:11:26,938] Trial 16 pruned. 
+[I 2025-10-23 11:11:37,443] Trial 17 pruned. 
+[I 2025-10-23 11:12:03,528] Trial 18 pruned. 
+[I 2025-10-23 11:12:13,599] Trial 19 pruned. 
+[I 2025-10-23 11:12:23,564] Trial 20 pruned. 
+[I 2025-10-23 11:13:30,257] Trial 21 pruned. 
+[I 2025-10-23 11:14:36,842] Trial 22 pruned. 
+[I 2025-10-23 11:15:18,979] Trial 23 pruned. 
+[I 2025-10-23 11:15:29,009] Trial 24 pruned. 
+[I 2025-10-23 11:15:40,299] Trial 25 pruned. 
+[I 2025-10-23 11:16:46,923] Trial 26 pruned. 
+[I 2025-10-23 11:17:29,192] Trial 27 pruned. 
+[I 2025-10-23 11:18:36,827] Trial 28 pruned. 
+[I 2025-10-23 11:19:51,161] Trial 29 pruned. 
+[I 2025-10-23 11:20:01,119] Trial 30 pruned. 
+[I 2025-10-23 11:20:11,178] Trial 31 pruned. 
+[I 2025-10-23 11:20:21,147] Trial 32 pruned. 
+[I 2025-10-23 11:20:31,361] Trial 33 pruned. 
+[I 2025-10-23 11:20:58,000] Trial 34 pruned. 
+[I 2025-10-23 11:21:08,667] Trial 35 pruned. 
+[I 2025-10-23 11:21:35,559] Trial 36 pruned. 
+[I 2025-10-23 11:22:42,187] Trial 37 pruned. 
+[I 2025-10-23 11:23:55,652] Trial 38 pruned. 
+[I 2025-10-23 11:24:05,920] Trial 39 pruned. 
+[I 2025-10-23 11:24:17,223] Trial 40 pruned. 
+[I 2025-10-23 11:24:28,355] Trial 41 pruned. 
+[I 2025-10-23 11:24:39,361] Trial 42 pruned. 
+[I 2025-10-23 11:24:50,523] Trial 43 pruned. 
+[I 2025-10-23 11:26:03,967] Trial 44 pruned. 
+[I 2025-10-23 11:26:13,743] Trial 45 pruned. 
+[I 2025-10-23 11:56:07,352] Trial 46 finished with value: 0.9202 and parameters: {'learning_rate': 0.003994380780416346, 'batch_size': 32, 'dropout': 0.08580669248266076}. Best is trial 0 with value: 0.9226.
+[I 2025-10-23 11:57:20,523] Trial 47 pruned. 
+[I 2025-10-23 11:58:03,239] Trial 48 pruned. 
+[I 2025-10-23 11:58:49,857] Trial 49 pruned. 
+[I 2025-10-23 11:59:56,537] Trial 50 pruned. 
+[I 2025-10-23 12:00:07,978] Trial 51 pruned. 
+[I 2025-10-23 12:00:18,559] Trial 52 pruned. 
+[I 2025-10-23 12:00:28,617] Trial 53 pruned. 
+[I 2025-10-23 12:00:38,772] Trial 54 pruned. 
+[I 2025-10-23 12:01:20,929] Trial 55 pruned. 
+[I 2025-10-23 12:01:46,789] Trial 56 pruned. 
+[I 2025-10-23 12:03:36,549] Trial 57 pruned. 
+[I 2025-10-23 12:03:46,652] Trial 58 pruned. 
+[I 2025-10-23 12:04:52,792] Trial 59 pruned. 
+wandb: updating run metadata; uploading artifact run-comparative-1-Small-CNN-1.2M-CIFAR-10-confusion_matrix_table; uploading media/table/confusion_matrix_table_401_199c4d0b4779c3567e7a.table.json
+wandb: uploading artifact run-comparative-1-Small-CNN-1.2M-CIFAR-10-confusion_matrix_table
+wandb: 
+wandb: Run history:
+wandb:      epoch ▁▁▁▁▁▁▁▂▂▂▂▂▂▂▂▃▃▃▃▃▄▄▄▄▅▅▅▅▅▅▆▆▆▆▆▆▇▇▇█
+wandb:   test_acc ▁
+wandb:  test_loss ▁
+wandb:  train_acc ▁▂▃▅▆▆▆▆▆▇▇▇▇▇▇▇▇▇██████████████████████
+wandb: train_loss █▇▅▄▄▄▃▃▃▃▂▂▂▂▂▂▂▂▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    val_acc ▁▃▆▆▆▇▇▇▇▇▇▇▇▇▇▇████████████████████████
+wandb:   val_loss █▅▅▅▃▂▂▂▂▂▂▂▂▁▂▂▂▂▂▁▂▂▂▂▂▂▁▁▂▁▁▁▁▁▁▁▁▁▁▁
+wandb: 
+wandb: Run summary:
+wandb:              best_val_acc 0.9218
+wandb:                     epoch 200
+wandb:            final_test_acc 0.9183
+wandb:           final_test_loss 0.33162
+wandb:    optuna/best_batch_size 32
+wandb:       optuna/best_dropout 0.21183
+wandb: optuna/best_learning_rate 0.00443
+wandb:                  test_acc 0.9183
+wandb:                 test_loss 0.33162
+wandb:                 train_acc 0.99896
+wandb:                        +3 ...
+wandb: 
+wandb: 🚀 View run comparative-1-Small-CNN-1.2M-CIFAR-10 at: https://wandb.ai/gengaru617-personal/251023-test/runs/comparative-1-Small-CNN-1.2M-CIFAR-10
+wandb: ⭐️ View project at: https://wandb.ai/gengaru617-personal/251023-test
+wandb: Synced 5 W&B file(s), 1 media file(s), 2 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./.research/iteration1/wandb/run-20251023_084201-comparative-1-Small-CNN-1.2M-CIFAR-10/logs

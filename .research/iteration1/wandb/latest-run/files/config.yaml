@@ -1,0 +1,237 @@
+_wandb:
+    value:
+        cli_version: 0.22.2
+        e:
+            sg8mw6x95nj3fhx3jl84eq6i6lq94cmf:
+                args:
+                    - run=comparative-1-Small-CNN-1.2M-CIFAR-10
+                    - results_dir=.research/iteration1
+                    - mode=full
+                cpu_count: 128
+                cpu_count_logical: 255
+                cudaVersion: "12.2"
+                disk:
+                    /:
+                        total: "942860439552"
+                        used: "686931509248"
+                email: gengaru617science@gmail.com
+                executable: /home/toma/t-80-8-a/_work/airas-20251023-075135-matsuzawa/airas-20251023-075135-matsuzawa/.venv/bin/python3
+                git:
+                    commit: 348e1d88bd45b89983ec68362cb0955eacd86a85
+                    remote: https://github.com/auto-res2/airas-20251023-075135-matsuzawa
+                gpu: NVIDIA A100-SXM4-80GB
+                gpu_count: 8
+                gpu_nvidia:
+                    - architecture: Ampere
+                      cudaCores: 6912
+                      memoryTotal: "85899345920"
+                      name: NVIDIA A100-SXM4-80GB
+                      uuid: GPU-b2bfa37b-3552-1e0b-bde9-db8440444c34
+                    - architecture: Ampere
+                      cudaCores: 6912
+                      memoryTotal: "85899345920"
+                      name: NVIDIA A100-SXM4-80GB
+                      uuid: GPU-a795d667-de06-5ce9-21ef-529a4c490078
+                    - architecture: Ampere
+                      cudaCores: 6912
+                      memoryTotal: "85899345920"
+                      name: NVIDIA A100-SXM4-80GB
+                      uuid: GPU-0fd0ad80-81cc-f29b-3d45-8958a45a05d7
+                    - architecture: Ampere
+                      cudaCores: 6912
+                      memoryTotal: "85899345920"
+                      name: NVIDIA A100-SXM4-80GB
+                      uuid: GPU-936c9c9c-12d6-2990-56b5-b97b2b1da0c4
+                    - architecture: Ampere
+                      cudaCores: 6912
+                      memoryTotal: "85899345920"
+                      name: NVIDIA A100-SXM4-80GB
+                      uuid: GPU-0cac1b52-33d6-3a3a-fde9-2a009cd0db83
+                    - architecture: Ampere
+                      cudaCores: 6912
+                      memoryTotal: "85899345920"
+                      name: NVIDIA A100-SXM4-80GB
+                      uuid: GPU-c39229f8-4ef5-aa62-e9ba-100bf65dd003
+                    - architecture: Ampere
+                      cudaCores: 6912
+                      memoryTotal: "85899345920"
+                      name: NVIDIA A100-SXM4-80GB
+                      uuid: GPU-b99e2047-8468-a9bb-9de6-b2dac3200b00
+                    - architecture: Ampere
+                      cudaCores: 6912
+                      memoryTotal: "85899345920"
+                      name: NVIDIA A100-SXM4-80GB
+                      uuid: GPU-bec1dff4-9d74-42bd-3c98-c5c48038d85d
+                host: t80-8-a-01
+                memory:
+                    total: "2151628926976"
+                os: Linux-5.15.0-131-generic-x86_64-with-glibc2.35
+                program: -m src.train
+                python: CPython 3.11.13
+                root: /home/toma/t-80-8-a/_work/airas-20251023-075135-matsuzawa/airas-20251023-075135-matsuzawa/.research/iteration1
+                startedAt: "2025-10-23T08:42:01.105841Z"
+                writerId: sg8mw6x95nj3fhx3jl84eq6i6lq94cmf
+        m: []
+        python_version: 3.11.13
+        t:
+            "1":
+                - 1
+                - 5
+                - 35
+                - 41
+                - 50
+                - 53
+            "2":
+                - 1
+                - 5
+                - 35
+                - 41
+                - 50
+                - 53
+            "3":
+                - 2
+                - 5
+                - 14
+                - 16
+                - 62
+            "4": 3.11.13
+            "5": 0.22.2
+            "12": 0.22.2
+            "13": linux-x86_64
+        visualize:
+            confusion_matrix:
+                panel_config:
+                    fieldSettings:
+                        Actual: Actual
+                        Predicted: Predicted
+                        nPredictions: nPredictions
+                    panelDefId: wandb/confusion_matrix/v1
+                    stringSettings:
+                        title: Confusion Matrix Curve
+                    transform:
+                        name: tableWithLeafColNames
+                    userQuery:
+                        queryFields:
+                            - args:
+                                - name: runSets
+                                  value: ${runSets}
+                              fields:
+                                - fields: []
+                                  name: id
+                                - fields: []
+                                  name: name
+                                - fields: []
+                                  name: _defaultColorIndex
+                                - args:
+                                    - name: tableKey
+                                      value: confusion_matrix_table
+                                  fields: []
+                                  name: summaryTable
+                              name: runSets
+                panel_type: Vega2
+mode:
+    value: full
+results_dir:
+    value: .research/iteration1
+run:
+    value:
+        dataset:
+            name: cifar10
+            test_split: 10000
+            train_split: 45000
+            transforms:
+                - RandomCrop:
+                    padding: 4
+                    size: 32
+                - RandomHorizontalFlip:
+                    p: 0.5
+                - ToTensor: {}
+                - Normalize:
+                    mean:
+                        - 0.4914
+                        - 0.4822
+                        - 0.4465
+                    std:
+                        - 0.2023
+                        - 0.1994
+                        - 0.201
+            val_split: 5000
+        method:
+            acquisition_function: expected_improvement
+            name: BOIL
+            seeds:
+                - 0
+                - 1
+                - 2
+                - 3
+                - 4
+            surrogate:
+                kernel: matern52
+                noise: 0.001
+                type: gaussian_process
+            type: comparative
+        model:
+            activation: relu
+            conv_layers:
+                - kernel_size: 3
+                  out_channels: 64
+                  padding: 1
+                  stride: 1
+                - kernel_size: 3
+                  out_channels: 128
+                  padding: 1
+                  stride: 1
+                - kernel_size: 3
+                  out_channels: 256
+                  padding: 1
+                  stride: 1
+                - kernel_size: 3
+                  out_channels: 256
+                  padding: 1
+                  stride: 1
+            dropout: 0.25
+            fc_layers:
+                - out_features: 512
+            name: Small-CNN-1.2M
+            num_parameters: 1200000
+        optuna:
+            direction: maximize
+            n_trials: 60
+            pruner: median
+            sampler: tpe
+            search_space:
+                batch_size:
+                    choices:
+                        - 32
+                        - 64
+                        - 128
+                    type: categorical
+                dropout:
+                    high: 0.5
+                    low: 0
+                    type: uniform
+                learning_rate:
+                    high: 0.1
+                    low: 0.0001
+                    type: loguniform
+        resources:
+            gpu_type: A100
+            gpus_per_trial: 1
+            time_budget_hours: 8
+        run_id: comparative-1-Small-CNN-1.2M-CIFAR-10
+        training:
+            batch_size: 64
+            checkpoint_interval_epochs: 1
+            epochs: 200
+            learning_rate: 0.01
+            lr_schedule: cosine
+            momentum: 0.9
+            optimizer: sgd
+            weight_decay: 0.0005
+trial_limited_batches:
+    value: 2
+wandb:
+    value:
+        entity: gengaru617-personal
+        mode: online
+        project: 251023-test
