@@ -46,7 +46,7 @@ jobs:
 
         Procedure:
         1.  Initial Setup: First, run `bash -c "$SYNC_COMMAND"` to install dependencies.
-        2.  Run Evaluation: Execute `bash -c "$EVALUATION_COMMAND"`.
+        2.  Run Evaluation: Execute `bash -c "$EVALUATION_COMMAND"` to generate comparison figures and aggregated metrics.
         3.  Analyze & Fix Loop: If evaluation fails, you MUST analyze the error, use your tools to fix the code, and then re-run evaluation. Repeat this cycle until it succeeds.
             A successful run is only confirmed when a message starting with `=== [EVALUATION] PASSED` is present in the output log.
         4. Visual Quality Check: Once evaluation succeeds, you MUST:
@@ -95,12 +95,12 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Install bun
+        run: npm install -g bun
+
       - name: Install opencode
         run: |
           curl -fsSL https://opencode.ai/install | bash
-
-      - name: Install bun
-        run: npm install -g bun
 
       - name: OpenCode Autonomous Evaluation, Fix, and Validate Loop
         env:
