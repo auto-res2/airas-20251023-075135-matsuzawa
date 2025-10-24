@@ -1,13 +1,10 @@
-name: Run Evaluation with Claude Code
+name: Compile LaTeX with Claude Code
 
 on:
   workflow_dispatch:
     inputs:
-      run_ids:
-        description: 'A JSON array of run_ids to process'
-        required: true
-      experiment_iteration:
-        description: "Iteration count"
+      subdir:
+        description: 'Subdirectory under .research/latex/ (e.g., iclr2025)'
         required: true
 
 permissions:
@@ -19,60 +16,42 @@ defaults:
     shell: bash
 
 jobs:
-  autonomous-evaluation-and-fix:
-    name: Autonomous Evaluation and Fix Cycle
+  autonomous-latex-fix-and-compile:
+    name: Autonomous LaTeX Fix and Compile Cycle
     runs-on: ubuntu-latest
     timeout-minutes: 120
-
+    
     env:
-      WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
-
-      SYNC_COMMAND: "uv sync"
-      EVALUATION_COMMAND: |
+      LATEX_DIR: .research/latex/${{ github.event.inputs.subdir }}
+      CHKTEX_COMMAND: |
         set -e
-        echo "=== [EVALUATION] Start at $(date -u) ==="
-
-        uv run python -m src.evaluate \
-          results_dir="$RESULTS_DIR" \
-          run_ids='${{ inputs.run_ids }}'
-        echo "=== [EVALUATION] PASSED at $(date -u) ==="
+        echo "=== [PHASE 1/2] Running ChkTeX... ==="
+        chktex -q paper.tex
+      COMPILE_COMMAND: |
+        set -e
+        echo "=== [PHASE 2/2] Compiling LaTeX document... ==="
+        pdflatex -interaction=nonstopmode paper.tex
+        bibtex paper
+        pdflatex -interaction=nonstopmode paper.tex
+        pdflatex -interaction=nonstopmode paper.tex
       PROMPT: |
-        You are a fully autonomous AI research assistant.
-        Your task is to ensure the evaluation script runs successfully to completion to generate comparison figures and aggregated metrics, by executing, analyzing, fixing, and re-validating it.
+        You are a fully autonomous AI assistant specializing in LaTeX document correction.
+        Your task is to ensure the LaTeX paper is free of chktex warnings and compiles successfully into a PDF. You will achieve this by executing, analyzing, fixing, and re-validating the document.
         You have been granted full tool access.
 
         Guiding Principles:
-        - Scope: Do not perform any Git operations like commit or push. Your sole responsibility is to make the code runnable.
-        - Method: When fixing errors, you MUST only modify existing files; do not create or delete any files.
-        - Autonomy: Execute all steps autonomously. Do not ask for permission.
+        - Scope: Do not perform any Git operations like commit or push. Your sole responsibility is to make the LaTeX document compilable.
+        - Method: When fixing errors, you MUST only modify existing files. Do not create new files.
+        - Minimal Edits: You MUST limit your changes to the absolute minimum required to fix LaTeX syntax, chktex warnings, or compilation errors.
+        - Autonomy: Execute all steps autonomously without asking for permission.
 
         Procedure:
-        1.  Initial Setup: First, run `bash -c "$SYNC_COMMAND"` to install dependencies.
-        2.  Run Evaluation: Execute `bash -c "$EVALUATION_COMMAND"` to generate comparison figures and aggregated metrics.
-        3.  Analyze & Fix Loop: If evaluation fails, you MUST analyze the error, use your tools to fix the code, and then re-run evaluation. Repeat this cycle until it succeeds.
-            A successful run is only confirmed when a message starting with `=== [EVALUATION] PASSED` is present in the output log.
-        4. Visual Quality Check: Once evaluation succeeds, you MUST:
-            a. Locate all generated figures in `$RESULTS_DIR`:
-              - Per-run figures in `$RESULTS_DIR/{run_id}/*.pdf` (or .png)
-              - Comparison figures in `$RESULTS_DIR/comparison/*.pdf` (or .png)
-
-            b. Read and analyze EACH figure for visual quality issues:
-              - Font sizes: Are axis labels, titles, legends readable? (not too small/large)
-              - Scale consistency: Do comparison plots use consistent Y-axis ranges?
-              - Color distinction: Are different lines/bars easily distinguishable?
-              - Layout: Is tight_layout applied? Are elements overlapping?
-              - Annotations: Are important values annotated on the figures?
-              - Resolution: Is the figure clear and publication-quality?
-
-            c. If ANY figure has visual quality issues:
-              - Identify the specific problem (e.g., "font size too small", "inconsistent Y-axis scales")
-              - Modify `src/evaluate.py` to fix the visualization code
-              - Re-run the entire evaluation from step 2
-              - Repeat until ALL figures pass visual quality checks
-
-            d. Only exit successfully when:
-              - Evaluation completes without errors
-              - ALL generated figures meet publication-quality standards
+        1.  Change Directory: First, change your working directory to `$LATEX_DIR`. All subsequent commands MUST be run from this directory.
+        2.  Run ChkTeX: Execute the command `bash -c "$CHKTEX_COMMAND"`.
+        3.  Analyze & Fix ChkTeX: If the command fails, you MUST analyze the chktex warnings from the output, fix the `paper.tex` file, and repeat step 2 until it passes.
+        4.  Run LaTeX Compile: Once chktex passes, execute `bash -c "$COMPILE_COMMAND"`.
+        5.  Analyze & Fix Compilation: If compilation fails, you MUST analyze the LaTeX errors (e.g., undefined control sequences, missing files, bad boxes), fix the `.tex` files, and repeat step 4 until it succeeds.
+        6.  Completion: Once both phases are complete, the task is finished.
 
     steps:
       - name: Checkout repository
@@ -80,46 +59,68 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
-        with:
-          python-version: "3.11"
-          enable-cache: false
-
-      - name: Prepare results dir
+      - name: Install LaTeX, ChkTeX, and other dependencies
         run: |
-          iteration_dir=".research/iteration${{ github.event.inputs.experiment_iteration }}"
-          mkdir -p "$iteration_dir"
-          echo "RESULTS_DIR=$iteration_dir" >> "$GITHUB_ENV"
+          sudo apt-get update
+          sudo apt-get install -y \
+            chktex \
+            texlive-base \
+            texlive-latex-recommended \
+            texlive-fonts-recommended \
+            texlive-latex-extra \
+            texlive-science
 
-      - name: Run Claude Code
-        uses: Wandalen/wretry.action@v3.8.0
+      - name: Copy experiment images to LaTeX directory
+        run: |
+          LATEST_ITER=$(ls -d .research/iteration* 2>/dev/null | sort -V | tail -n 1)
+
+          if [ -z "$LATEST_ITER" ]; then
+            echo "No iteration directories found, skipping image copy"
+            exit 0
+          fi
+
+          echo "Copying images from $LATEST_ITER"
+          mkdir -p "${LATEX_DIR}/images"
+
+          find "$LATEST_ITER" -mindepth 2 -maxdepth 2 -type f -name "*.pdf" \
+            -exec cp {} "${LATEX_DIR}/images/" \;
+
+          echo "Image copy completed. Files in images/:"
+          ls -la "${LATEX_DIR}/images/" || echo "No images found"
+
+      - name: Claude Code Autonomous Run, Fix, and Validate Loop
+        uses: anthropics/claude-code-action@v1
         with:
-          action: anthropics/claude-code-action@v1
-          attempt_limit: 10
-          attempt_delay: 10000
-          verbose: true
-          with: |
-            anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-            prompt: ${{ env.PROMPT }}
-            claude_args: "--max-turns=100 --allowed-tools Bash,Write,Edit,MultiEdit,TodoWrite"
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: ${{ env.PROMPT }}
+          claude_args: "--max-turns=100 --allowed-tools Bash,Write,Edit,MultiEdit,TodoWrite"
 
-      - name: Commit and push evaluation results
-        if: always()
+      - name: Move compiled PDF to .research/
+        run: |
+          src="${LATEX_DIR}/paper.pdf"
+          dest=".research/paper.pdf"
+          if [ -f "$src" ]; then
+            mv "$src" "$dest"
+            echo "Successfully moved compiled PDF to $dest"
+          else
+            echo "Warning: Compiled PDF not found at $src"
+            exit 1
+          fi
+
+      - name: Commit and push LaTeX outputs
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
-          git add "$RESULTS_DIR"
-          git add --update .
+          git add .
 
           if ! git diff --staged --quiet; then
-            git commit -m "[CI] Commit evaluation results (iteration ${{ github.event.inputs.experiment_iteration }})"
+            git commit -m "[CI] Autonomous LaTeX fixes and compilation for ${{ github.event.inputs.subdir }}"
             for i in {1..5}; do
-              git pull --rebase && git push && break
+              git push && break
               echo "Push failed on attempt $i. Retrying in $((2**i)) seconds..."
               sleep $((2**i))
             done
           else
-            echo "No changes were made by the agent or the evaluation."
+            echo "No changes were made by the agent."
           fi
