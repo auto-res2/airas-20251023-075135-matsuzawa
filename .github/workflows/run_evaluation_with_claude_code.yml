@@ -98,16 +98,13 @@ jobs:
       - name: Install bun
         run: npm install -g bun
 
-      - name: Install Claude Code CLI
-        run: npm install -g @anthropic-ai/claude-code
-
       - name: Claude Code Autonomous Evaluation, Fix, and Validate Loop
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
         run: |
           for i in {1..10}; do
-            claude-code run \
+            npx @anthropic-ai/claude-code run \
               --max-turns=100 \
               --allowed-tools Bash,Write,Edit,MultiEdit,TodoWrite \
               "$PROMPT" && break
