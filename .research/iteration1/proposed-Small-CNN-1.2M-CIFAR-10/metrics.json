@@ -1,0 +1,303 @@
+{
+  "history": {},
+  "summary": {
+    "_runtime": 61753,
+    "_step": 401,
+    "_timestamp": 1761270636.6310844,
+    "_wandb": {
+      "runtime": 61753
+    },
+    "best_val_acc": 0.922,
+    "confusion_matrix": [
+      [
+        935,
+        8,
+        17,
+        5,
+        4,
+        0,
+        2,
+        3,
+        18,
+        8
+      ],
+      [
+        4,
+        961,
+        1,
+        1,
+        1,
+        0,
+        2,
+        2,
+        5,
+        23
+      ],
+      [
+        15,
+        0,
+        885,
+        24,
+        30,
+        14,
+        22,
+        5,
+        2,
+        3
+      ],
+      [
+        6,
+        1,
+        16,
+        840,
+        20,
+        73,
+        19,
+        11,
+        4,
+        10
+      ],
+      [
+        3,
+        1,
+        16,
+        16,
+        933,
+        10,
+        10,
+        10,
+        1,
+        0
+      ],
+      [
+        4,
+        1,
+        15,
+        70,
+        14,
+        881,
+        5,
+        10,
+        0,
+        0
+      ],
+      [
+        5,
+        1,
+        10,
+        16,
+        4,
+        5,
+        957,
+        0,
+        1,
+        1
+      ],
+      [
+        6,
+        2,
+        8,
+        13,
+        16,
+        17,
+        0,
+        935,
+        0,
+        3
+      ],
+      [
+        24,
+        10,
+        1,
+        4,
+        0,
+        1,
+        1,
+        0,
+        948,
+        11
+      ],
+      [
+        8,
+        26,
+        2,
+        3,
+        1,
+        1,
+        1,
+        2,
+        11,
+        945
+      ]
+    ],
+    "confusion_matrix_table": {
+      "_latest_artifact_path": "wandb-client-artifact://xyyyi8io1pcud901gp77o8ag6cw3ntlgz5u355q8px5rgfqome6vsaxabw20xq8yc3ath1mvit8tbrnod0c3z1ialfvm88kyxeu94f3zb928q4h08kllx2df8nxjhhqg:latest/confusion_matrix_table.table.json",
+      "_type": "table-file",
+      "artifact_path": "wandb-client-artifact://h9xj7mkbm8uac397egj6m1cenvnsfw9p79oko411vmippnnpxps7nwqstmj9s9tij9i883u8jhpxj1533f5mzp8fxi9iirtnjumyqyb40d3mciamf87zhh0k8dv4vkrl/confusion_matrix_table.table.json",
+      "log_mode": "IMMUTABLE",
+      "ncols": 3,
+      "nrows": 100,
+      "path": "media/table/confusion_matrix_table_401_b381a6b3d0c53313eec2.table.json",
+      "sha256": "b381a6b3d0c53313eec2bf90104cab4939349de7d8b3deeb097e7a9892d6245f",
+      "size": 2615
+    },
+    "epoch": 200,
+    "final_test_acc": 0.922,
+    "final_test_loss": 0.30908863006234166,
+    "optuna/best_batch_size": 32,
+    "optuna/best_dropout": 0.051451995679921675,
+    "optuna/best_learning_rate": 0.002720727748610218,
+    "test_acc": 0.922,
+    "test_loss": 0.30908863006234166,
+    "train_acc": 0.9991111111111112,
+    "train_loss": 0.007702981653457714,
+    "val_acc": 0.918,
+    "val_loss": 0.2986513639137149
+  },
+  "config": {
+    "run": {
+      "model": {
+        "name": "Small-CNN-1.2M",
+        "dropout": 0.25,
+        "fc_layers": [
+          {
+            "out_features": 512
+          }
+        ],
+        "activation": "relu",
+        "conv_layers": [
+          {
+            "stride": 1,
+            "padding": 1,
+            "kernel_size": 3,
+            "out_channels": 64
+          },
+          {
+            "stride": 1,
+            "padding": 1,
+            "kernel_size": 3,
+            "out_channels": 128
+          },
+          {
+            "stride": 1,
+            "padding": 1,
+            "kernel_size": 3,
+            "out_channels": 256
+          },
+          {
+            "stride": 1,
+            "padding": 1,
+            "kernel_size": 3,
+            "out_channels": 256
+          }
+        ],
+        "num_parameters": 1200000
+      },
+      "method": {
+        "beta": 0.25,
+        "name": "BOIL-C",
+        "type": "proposed",
+        "seeds": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "surrogate": {
+          "type": "gaussian_process",
+          "noise": 0.001,
+          "kernel": "matern52"
+        },
+        "compression_formula": "u(x,t) = s(r(x,t); m0,g0) - beta * log(1 + C(x,t))",
+        "acquisition_function": "expected_improvement"
+      },
+      "optuna": {
+        "pruner": "median",
+        "sampler": "tpe",
+        "n_trials": 60,
+        "direction": "maximize",
+        "search_space": {
+          "dropout": {
+            "low": 0,
+            "high": 0.5,
+            "type": "uniform"
+          },
+          "batch_size": {
+            "type": "categorical",
+            "choices": [
+              32,
+              64,
+              128
+            ]
+          },
+          "learning_rate": {
+            "low": 0.0001,
+            "high": 0.1,
+            "type": "loguniform"
+          }
+        }
+      },
+      "run_id": "proposed-Small-CNN-1.2M-CIFAR-10",
+      "dataset": {
+        "name": "cifar10",
+        "val_split": 5000,
+        "test_split": 10000,
+        "transforms": [
+          {
+            "RandomCrop": {
+              "size": 32,
+              "padding": 4
+            }
+          },
+          {
+            "RandomHorizontalFlip": {
+              "p": 0.5
+            }
+          },
+          {
+            "ToTensor": {}
+          },
+          {
+            "Normalize": {
+              "std": [
+                0.2023,
+                0.1994,
+                0.201
+              ],
+              "mean": [
+                0.4914,
+                0.4822,
+                0.4465
+              ]
+            }
+          }
+        ],
+        "train_split": 45000
+      },
+      "training": {
+        "epochs": 200,
+        "momentum": 0.9,
+        "optimizer": "sgd",
+        "batch_size": 64,
+        "lr_schedule": "cosine",
+        "weight_decay": 0.0005,
+        "learning_rate": 0.01,
+        "checkpoint_interval_epochs": 1
+      },
+      "resources": {
+        "gpu_type": "A100",
+        "gpus_per_trial": 1,
+        "time_budget_hours": 8
+      }
+    },
+    "mode": "full",
+    "wandb": {
+      "mode": "online",
+      "entity": "gengaru617-personal",
+      "project": "251023-test"
+    },
+    "results_dir": ".research/iteration1",
+    "trial_limited_batches": 2
+  }
+}

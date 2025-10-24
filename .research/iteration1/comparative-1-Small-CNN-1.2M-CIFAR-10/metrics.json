@@ -1,0 +1,301 @@
+{
+  "history": {},
+  "summary": {
+    "_runtime": 13991,
+    "_step": 401,
+    "_timestamp": 1761222895.706691,
+    "_wandb": {
+      "runtime": 13991
+    },
+    "best_val_acc": 0.9218,
+    "confusion_matrix": [
+      [
+        928,
+        7,
+        16,
+        4,
+        5,
+        0,
+        5,
+        4,
+        25,
+        6
+      ],
+      [
+        6,
+        967,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        2,
+        24
+      ],
+      [
+        20,
+        0,
+        879,
+        23,
+        28,
+        16,
+        19,
+        9,
+        4,
+        2
+      ],
+      [
+        13,
+        2,
+        21,
+        825,
+        24,
+        68,
+        19,
+        11,
+        7,
+        10
+      ],
+      [
+        3,
+        1,
+        18,
+        14,
+        922,
+        10,
+        14,
+        15,
+        2,
+        1
+      ],
+      [
+        5,
+        2,
+        17,
+        71,
+        18,
+        867,
+        4,
+        15,
+        0,
+        1
+      ],
+      [
+        2,
+        2,
+        14,
+        8,
+        7,
+        3,
+        958,
+        2,
+        1,
+        3
+      ],
+      [
+        11,
+        2,
+        9,
+        11,
+        11,
+        18,
+        0,
+        934,
+        0,
+        4
+      ],
+      [
+        24,
+        9,
+        3,
+        2,
+        0,
+        0,
+        2,
+        1,
+        954,
+        5
+      ],
+      [
+        13,
+        24,
+        0,
+        2,
+        0,
+        0,
+        1,
+        2,
+        9,
+        949
+      ]
+    ],
+    "confusion_matrix_table": {
+      "_latest_artifact_path": "wandb-client-artifact://n0y9622dskcys4axgi5rifhmorgv6idpratpnoohc55vqkogwp6v1llyd7byd7gbo2y5ekfv79zst87zkvbqf65oy7flqrygx2es09asia6wb333hpqdqpmvvukuwxbw:latest/confusion_matrix_table.table.json",
+      "_type": "table-file",
+      "artifact_path": "wandb-client-artifact://ygehjguyyl8ksnt1mmgjf0tjue5vkrdv3e0vld6b15obgle5mbtp5p1mrx39yf8sgvfurra48fobyyq0nttexqtibd542fucyw1hapyl41adqr5khr4wk7cx3max3gyh/confusion_matrix_table.table.json",
+      "log_mode": "IMMUTABLE",
+      "ncols": 3,
+      "nrows": 100,
+      "path": "media/table/confusion_matrix_table_401_199c4d0b4779c3567e7a.table.json",
+      "sha256": "199c4d0b4779c3567e7a405c7986f19d4175e4a55ae7d9f77a3e3ea8144b71ed",
+      "size": 2614
+    },
+    "epoch": 200,
+    "final_test_acc": 0.9183,
+    "final_test_loss": 0.33161503999233244,
+    "optuna/best_batch_size": 32,
+    "optuna/best_dropout": 0.21182739966945235,
+    "optuna/best_learning_rate": 0.004430375245218269,
+    "test_acc": 0.9183,
+    "test_loss": 0.33161503999233244,
+    "train_acc": 0.9989555555555556,
+    "train_loss": 0.00737302821442071,
+    "val_acc": 0.9174,
+    "val_loss": 0.3019405131399632
+  },
+  "config": {
+    "run": {
+      "model": {
+        "name": "Small-CNN-1.2M",
+        "dropout": 0.25,
+        "fc_layers": [
+          {
+            "out_features": 512
+          }
+        ],
+        "activation": "relu",
+        "conv_layers": [
+          {
+            "stride": 1,
+            "padding": 1,
+            "kernel_size": 3,
+            "out_channels": 64
+          },
+          {
+            "stride": 1,
+            "padding": 1,
+            "kernel_size": 3,
+            "out_channels": 128
+          },
+          {
+            "stride": 1,
+            "padding": 1,
+            "kernel_size": 3,
+            "out_channels": 256
+          },
+          {
+            "stride": 1,
+            "padding": 1,
+            "kernel_size": 3,
+            "out_channels": 256
+          }
+        ],
+        "num_parameters": 1200000
+      },
+      "method": {
+        "name": "BOIL",
+        "type": "comparative",
+        "seeds": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "surrogate": {
+          "type": "gaussian_process",
+          "noise": 0.001,
+          "kernel": "matern52"
+        },
+        "acquisition_function": "expected_improvement"
+      },
+      "optuna": {
+        "pruner": "median",
+        "sampler": "tpe",
+        "n_trials": 60,
+        "direction": "maximize",
+        "search_space": {
+          "dropout": {
+            "low": 0,
+            "high": 0.5,
+            "type": "uniform"
+          },
+          "batch_size": {
+            "type": "categorical",
+            "choices": [
+              32,
+              64,
+              128
+            ]
+          },
+          "learning_rate": {
+            "low": 0.0001,
+            "high": 0.1,
+            "type": "loguniform"
+          }
+        }
+      },
+      "run_id": "comparative-1-Small-CNN-1.2M-CIFAR-10",
+      "dataset": {
+        "name": "cifar10",
+        "val_split": 5000,
+        "test_split": 10000,
+        "transforms": [
+          {
+            "RandomCrop": {
+              "size": 32,
+              "padding": 4
+            }
+          },
+          {
+            "RandomHorizontalFlip": {
+              "p": 0.5
+            }
+          },
+          {
+            "ToTensor": {}
+          },
+          {
+            "Normalize": {
+              "std": [
+                0.2023,
+                0.1994,
+                0.201
+              ],
+              "mean": [
+                0.4914,
+                0.4822,
+                0.4465
+              ]
+            }
+          }
+        ],
+        "train_split": 45000
+      },
+      "training": {
+        "epochs": 200,
+        "momentum": 0.9,
+        "optimizer": "sgd",
+        "batch_size": 64,
+        "lr_schedule": "cosine",
+        "weight_decay": 0.0005,
+        "learning_rate": 0.01,
+        "checkpoint_interval_epochs": 1
+      },
+      "resources": {
+        "gpu_type": "A100",
+        "gpus_per_trial": 1,
+        "time_budget_hours": 8
+      }
+    },
+    "mode": "full",
+    "wandb": {
+      "mode": "online",
+      "entity": "gengaru617-personal",
+      "project": "251023-test"
+    },
+    "results_dir": ".research/iteration1",
+    "trial_limited_batches": 2
+  }
+}
