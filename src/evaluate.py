@@ -244,7 +244,7 @@ def main() -> None:
     for rid in run_ids:
         print(f"\nProcessing run {rid}")
         run = api.run(f"{entity}/{project}/{rid}")
-        history = run.history(keys=["train_acc", "val_acc", "test_acc", "Step"], pandas=True)
+        history = run.history(pandas=True)
         summary = dict(run.summary._json_dict)
         config = dict(run.config)
         run_configs[rid] = config
