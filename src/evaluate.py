@@ -27,27 +27,27 @@ def _plot_learning_curve(path: Path, history: pd.DataFrame, run_id: str) -> str:
     plt.figure(figsize=(8, 5))
     has_data = False
 
-    # Filter out rows where epoch is NaN (if epoch column exists)
-    if "epoch" in history.columns:
-        history = history.dropna(subset=["epoch"])
+    # Filter out rows where Step is NaN (if Step column exists)
+    if "Step" in history.columns:
+        history = history.dropna(subset=["Step"])
 
         if "train_acc" in history.columns and not history["train_acc"].isna().all():
-            valid_data = history[["epoch", "train_acc"]].dropna()
+            valid_data = history[["Step", "train_acc"]].dropna()
             if len(valid_data) > 0:
-                plt.plot(valid_data["epoch"], valid_data["train_acc"], label="Train Accuracy", linewidth=2.5, marker='o', markersize=4)
+                plt.plot(valid_data["Step"], valid_data["train_acc"], label="Train Accuracy", linewidth=2.5, marker='o', markersize=4)
                 has_data = True
         if "val_acc" in history.columns and not history["val_acc"].isna().all():
-            valid_data = history[["epoch", "val_acc"]].dropna()
+            valid_data = history[["Step", "val_acc"]].dropna()
             if len(valid_data) > 0:
-                plt.plot(valid_data["epoch"], valid_data["val_acc"], label="Val Accuracy", linewidth=2.5, marker='s', markersize=4)
+                plt.plot(valid_data["Step"], valid_data["val_acc"], label="Val Accuracy", linewidth=2.5, marker='s', markersize=4)
                 has_data = True
         if "test_acc" in history.columns and not history["test_acc"].isna().all():
-            valid_data = history[["epoch", "test_acc"]].dropna()
+            valid_data = history[["Step", "test_acc"]].dropna()
             if len(valid_data) > 0:
-                plt.plot(valid_data["epoch"], valid_data["test_acc"], label="Test Accuracy", linewidth=2.5, marker='^', markersize=4)
+                plt.plot(valid_data["Step"], valid_data["test_acc"], label="Test Accuracy", linewidth=2.5, marker='^', markersize=4)
                 has_data = True
     else:
-        # If no epoch column, use index as x-axis
+        # If no Step column, use index as x-axis
         x_values = range(len(history))
         if "train_acc" in history.columns and not history["train_acc"].isna().all():
             valid_indices = history["train_acc"].notna()
@@ -65,7 +65,7 @@ def _plot_learning_curve(path: Path, history: pd.DataFrame, run_id: str) -> str:
                 plt.plot(np.array(x_values)[valid_indices], history.loc[valid_indices, "test_acc"], label="Test Accuracy", linewidth=2.5, marker='^', markersize=4)
                 has_data = True
 
-    plt.xlabel("Epoch", fontsize=14, fontweight='bold')
+    plt.xlabel("Step", fontsize=14, fontweight='bold')
     plt.ylabel("Accuracy", fontsize=14, fontweight='bold')
     plt.tick_params(axis='both', which='major', labelsize=12)
     if has_data:
@@ -244,7 +244,7 @@ def main() -> None:
     for rid in run_ids:
         print(f"\nProcessing run {rid}")
         run = api.run(f"{entity}/{project}/{rid}")
-        history = run.history(keys=["train_acc", "val_acc", "test_acc", "epoch"], pandas=True)
+        history = run.history(keys=["train_acc", "val_acc", "test_acc", "Step"], pandas=True)
         summary = dict(run.summary._json_dict)
         config = dict(run.config)
         run_configs[rid] = config
