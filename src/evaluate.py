@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Dict, List
 
@@ -81,13 +82,28 @@ def _box_plot(path: Path, metric_dict: Dict[str, float], metric_name: str) -> st
 # -----------------------------------------------------------------------------
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Evaluate WandB runs & generate artefacts")
-    parser.add_argument("results_dir", type=str, help="Directory containing experiment metadata")
-    parser.add_argument("run_ids", type=str, help="JSON list of WandB run IDs")
-    args = parser.parse_args()
+    # Parse arguments in the format: key="value" or key=value
+    # This handles both traditional argparse and key=value style arguments
+    parsed_args = {}
+    for arg in sys.argv[1:]:
+        if '=' in arg:
+            key, value = arg.split('=', 1)
+            # Remove quotes if present
+            value = value.strip('"').strip("'")
+            parsed_args[key] = value
 
-    results_dir = Path(args.results_dir).expanduser().resolve()
-    run_ids: List[str] = json.loads(args.run_ids)
+    # If we have key=value style arguments, use them directly
+    if 'results_dir' in parsed_args and 'run_ids' in parsed_args:
+        results_dir = Path(parsed_args['results_dir']).expanduser().resolve()
+        run_ids: List[str] = json.loads(parsed_args['run_ids'])
+    else:
+        # Fall back to traditional argparse
+        parser = argparse.ArgumentParser(description="Evaluate WandB runs & generate artefacts")
+        parser.add_argument("--results_dir", type=str, required=True, help="Directory containing experiment metadata")
+        parser.add_argument("--run_ids", type=str, required=True, help="JSON list of WandB run IDs")
+        args = parser.parse_args()
+        results_dir = Path(args.results_dir).expanduser().resolve()
+        run_ids = json.loads(args.run_ids)
 
     # ---------------------------------------------------------------------
     # Load global WandB project/entity information
