@@ -24,23 +24,60 @@ sns.set(style="whitegrid")
 # -----------------------------------------------------------------------------
 
 def _plot_learning_curve(path: Path, history: pd.DataFrame, run_id: str) -> str:
-    plt.figure(figsize=(6, 4))
+    plt.figure(figsize=(8, 5))
     has_data = False
-    if "train_acc" in history.columns and not history["train_acc"].isna().all():
-        plt.plot(history["epoch"], history["train_acc"], label="Train Accuracy", linewidth=2)
-        has_data = True
-    if "val_acc" in history.columns and not history["val_acc"].isna().all():
-        plt.plot(history["epoch"], history["val_acc"], label="Val Accuracy", linewidth=2)
-        has_data = True
-    if "test_acc" in history.columns and not history["test_acc"].isna().all():
-        plt.plot(history["epoch"], history["test_acc"], label="Test Accuracy", linewidth=2)
-        has_data = True
-    plt.xlabel("Epoch", fontsize=12)
-    plt.ylabel("Accuracy", fontsize=12)
+
+    # Filter out rows where epoch is NaN (if epoch column exists)
+    if "epoch" in history.columns:
+        history = history.dropna(subset=["epoch"])
+
+        if "train_acc" in history.columns and not history["train_acc"].isna().all():
+            valid_data = history[["epoch", "train_acc"]].dropna()
+            if len(valid_data) > 0:
+                plt.plot(valid_data["epoch"], valid_data["train_acc"], label="Train Accuracy", linewidth=2.5, marker='o', markersize=4)
+                has_data = True
+        if "val_acc" in history.columns and not history["val_acc"].isna().all():
+            valid_data = history[["epoch", "val_acc"]].dropna()
+            if len(valid_data) > 0:
+                plt.plot(valid_data["epoch"], valid_data["val_acc"], label="Val Accuracy", linewidth=2.5, marker='s', markersize=4)
+                has_data = True
+        if "test_acc" in history.columns and not history["test_acc"].isna().all():
+            valid_data = history[["epoch", "test_acc"]].dropna()
+            if len(valid_data) > 0:
+                plt.plot(valid_data["epoch"], valid_data["test_acc"], label="Test Accuracy", linewidth=2.5, marker='^', markersize=4)
+                has_data = True
+    else:
+        # If no epoch column, use index as x-axis
+        x_values = range(len(history))
+        if "train_acc" in history.columns and not history["train_acc"].isna().all():
+            valid_indices = history["train_acc"].notna()
+            if valid_indices.any():
+                plt.plot(np.array(x_values)[valid_indices], history.loc[valid_indices, "train_acc"], label="Train Accuracy", linewidth=2.5, marker='o', markersize=4)
+                has_data = True
+        if "val_acc" in history.columns and not history["val_acc"].isna().all():
+            valid_indices = history["val_acc"].notna()
+            if valid_indices.any():
+                plt.plot(np.array(x_values)[valid_indices], history.loc[valid_indices, "val_acc"], label="Val Accuracy", linewidth=2.5, marker='s', markersize=4)
+                has_data = True
+        if "test_acc" in history.columns and not history["test_acc"].isna().all():
+            valid_indices = history["test_acc"].notna()
+            if valid_indices.any():
+                plt.plot(np.array(x_values)[valid_indices], history.loc[valid_indices, "test_acc"], label="Test Accuracy", linewidth=2.5, marker='^', markersize=4)
+                has_data = True
+
+    plt.xlabel("Epoch", fontsize=14, fontweight='bold')
+    plt.ylabel("Accuracy", fontsize=14, fontweight='bold')
+    plt.tick_params(axis='both', which='major', labelsize=12)
     if has_data:
-        plt.legend(fontsize=10, loc='best')
-    plt.title(f"Learning Curve: {run_id}", fontsize=12)
-    plt.grid(True, alpha=0.3)
+        plt.legend(fontsize=12, loc='best', frameon=True, shadow=True)
+    else:
+        # Add a note when no data is available
+        plt.text(0.5, 0.5, 'No training history available\nfrom WandB run',
+                ha='center', va='center', fontsize=14,
+                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5),
+                transform=plt.gca().transAxes)
+    plt.title(f"Learning Curve: {run_id}", fontsize=16, fontweight='bold', pad=15)
+    plt.grid(True, alpha=0.3, linestyle='--')
     plt.tight_layout()
     fname = f"{run_id}_learning_curve.pdf"
     plt.savefig(path / fname, dpi=300, bbox_inches='tight')
@@ -49,14 +86,14 @@ def _plot_learning_curve(path: Path, history: pd.DataFrame, run_id: str) -> str:
 
 
 def _plot_confusion_matrix(cm: np.ndarray, classes: List[str], path: Path, run_id: str) -> str:
-    plt.figure(figsize=(8, 7))
+    plt.figure(figsize=(10, 8))
     sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=classes, yticklabels=classes,
-                annot_kws={"fontsize": 10}, cbar_kws={"shrink": 0.8})
-    plt.ylabel("True label", fontsize=12)
-    plt.xlabel("Predicted label", fontsize=12)
-    plt.title("Confusion Matrix", fontsize=14)
-    plt.xticks(fontsize=10)
-    plt.yticks(fontsize=10)
+                annot_kws={"fontsize": 11}, cbar_kws={"shrink": 0.8}, linewidths=0.5, linecolor='gray')
+    plt.ylabel("True label", fontsize=14, fontweight='bold')
+    plt.xlabel("Predicted label", fontsize=14, fontweight='bold')
+    plt.title("Confusion Matrix", fontsize=16, fontweight='bold', pad=15)
+    plt.xticks(fontsize=11)
+    plt.yticks(fontsize=11)
     plt.tight_layout()
     fname = f"{run_id}_confusion_matrix.pdf"
     plt.savefig(path / fname, dpi=300, bbox_inches='tight')
@@ -65,24 +102,49 @@ def _plot_confusion_matrix(cm: np.ndarray, classes: List[str], path: Path, run_i
 
 
 def _bar_chart(path: Path, metric_dict: Dict[str, float], metric_name: str) -> str:
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(12, 7))
     x_labels = list(metric_dict.keys())
     values = list(metric_dict.values())
-    bars = plt.bar(range(len(x_labels)), values, color='steelblue', alpha=0.8)
+
+    # Use different colors for better distinction
+    colors = plt.cm.Set2(range(len(x_labels)))
+    bars = plt.bar(range(len(x_labels)), values, color=colors, alpha=0.85, edgecolor='black', linewidth=1.5)
 
     # Annotate bars with values
     for i, v in enumerate(values):
-        offset = max(values) * 0.02 if metric_name != "relative_improvement" else 0.0005
-        plt.text(i, v + offset, f"{v:.3f}", ha="center", va="bottom", fontsize=11, fontweight='bold')
+        if metric_name == "relative_improvement":
+            offset = 0.0005 if v >= 0 else -0.0005
+            va = "bottom" if v >= 0 else "top"
+            plt.text(i, v + offset, f"{v:.4f}", ha="center", va=va, fontsize=12, fontweight='bold')
+        else:
+            offset = max(values) * 0.02
+            plt.text(i, v + offset, f"{v:.3f}", ha="center", va="bottom", fontsize=12, fontweight='bold')
 
-    plt.xticks(range(len(x_labels)), x_labels, rotation=15, ha='right', fontsize=10)
-    plt.ylabel(metric_name.replace('_', ' ').title(), fontsize=12)
-    plt.title(f"Comparison: {metric_name.replace('_', ' ').title()}", fontsize=14)
-    plt.grid(axis='y', alpha=0.3)
+    # Shorten labels for better readability
+    shortened_labels = []
+    for label in x_labels:
+        if len(label) > 30:
+            # Split on hyphens and keep important parts
+            parts = label.split('-')
+            shortened = '\n'.join(['-'.join(parts[i:i+2]) for i in range(0, len(parts), 2)])
+            shortened_labels.append(shortened)
+        else:
+            shortened_labels.append(label)
+
+    plt.xticks(range(len(x_labels)), shortened_labels, rotation=0, ha='center', fontsize=11)
+    plt.ylabel(metric_name.replace('_', ' ').title(), fontsize=14, fontweight='bold')
+    plt.title(f"Comparison: {metric_name.replace('_', ' ').title()}", fontsize=16, fontweight='bold', pad=15)
+    plt.grid(axis='y', alpha=0.3, linestyle='--')
+    plt.tick_params(axis='y', labelsize=12)
 
     # Set y-axis to start from 0 for accuracy, auto for relative improvement
     if metric_name == "accuracy":
-        plt.ylim(bottom=0)
+        plt.ylim(bottom=0, top=min(1.0, max(values) * 1.15))
+    else:
+        # For relative improvement, add padding to y-axis
+        y_range = max(values) - min(values)
+        padding = y_range * 0.2 if y_range > 0 else 0.001
+        plt.ylim(bottom=min(values) - padding, top=max(values) + padding)
 
     plt.tight_layout()
     fname = f"comparison_{metric_name}_bar_chart.pdf"
@@ -92,15 +154,32 @@ def _bar_chart(path: Path, metric_dict: Dict[str, float], metric_name: str) -> s
 
 
 def _box_plot(path: Path, metric_dict: Dict[str, float], metric_name: str) -> str:
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(12, 7))
     df = pd.DataFrame({"run": list(metric_dict.keys()), metric_name: list(metric_dict.values())})
-    sns.boxplot(x="run", y=metric_name, data=df, palette="Set2")
 
-    plt.xticks(rotation=15, ha='right', fontsize=10)
-    plt.xlabel("Run", fontsize=12)
-    plt.ylabel(metric_name.replace('_', ' ').title(), fontsize=12)
-    plt.title(f"Comparison: {metric_name.replace('_', ' ').title()} Distribution", fontsize=14)
-    plt.grid(axis='y', alpha=0.3)
+    # Use hue parameter to avoid deprecation warning
+    sns.boxplot(x="run", y=metric_name, hue="run", data=df, palette="Set2", legend=False, linewidth=2)
+
+    # Add individual points to show actual values
+    sns.stripplot(x="run", y=metric_name, data=df, color='black', size=8, alpha=0.6, jitter=False)
+
+    # Shorten labels for better readability
+    x_labels = list(metric_dict.keys())
+    shortened_labels = []
+    for label in x_labels:
+        if len(label) > 30:
+            parts = label.split('-')
+            shortened = '\n'.join(['-'.join(parts[i:i+2]) for i in range(0, len(parts), 2)])
+            shortened_labels.append(shortened)
+        else:
+            shortened_labels.append(label)
+
+    plt.xticks(range(len(x_labels)), shortened_labels, rotation=0, ha='center', fontsize=11)
+    plt.xlabel("Run", fontsize=14, fontweight='bold')
+    plt.ylabel(metric_name.replace('_', ' ').title(), fontsize=14, fontweight='bold')
+    plt.title(f"Comparison: {metric_name.replace('_', ' ').title()} Distribution", fontsize=16, fontweight='bold', pad=15)
+    plt.grid(axis='y', alpha=0.3, linestyle='--')
+    plt.tick_params(axis='y', labelsize=12)
 
     # Set y-axis to start from 0 for accuracy for consistency with bar chart
     if metric_name == "accuracy":
