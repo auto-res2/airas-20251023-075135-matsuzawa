@@ -1615,14 +1615,14 @@
       null,
       null,
       {
-        "_latest_artifact_path": "wandb-client-artifact://xyyyi8io1pcud901gp77o8ag6cw3ntlgz5u355q8px5rgfqome6vsaxabw20xq8yc3ath1mvit8tbrnod0c3z1ialfvm88kyxeu94f3zb928q4h08kllx2df8nxjhhqg:latest/confusion_matrix_table.table.json",
         "nrows": 100,
         "size": 2615,
+        "sha256": "b381a6b3d0c53313eec2bf90104cab4939349de7d8b3deeb097e7a9892d6245f",
+        "_type": "table-file",
         "log_mode": "IMMUTABLE",
         "artifact_path": "wandb-client-artifact://h9xj7mkbm8uac397egj6m1cenvnsfw9p79oko411vmippnnpxps7nwqstmj9s9tij9i883u8jhpxj1533f5mzp8fxi9iirtnjumyqyb40d3mciamf87zhh0k8dv4vkrl/confusion_matrix_table.table.json",
         "path": "media/table/confusion_matrix_table_401_b381a6b3d0c53313eec2.table.json",
-        "sha256": "b381a6b3d0c53313eec2bf90104cab4939349de7d8b3deeb097e7a9892d6245f",
-        "_type": "table-file",
+        "_latest_artifact_path": "wandb-client-artifact://xyyyi8io1pcud901gp77o8ag6cw3ntlgz5u355q8px5rgfqome6vsaxabw20xq8yc3ath1mvit8tbrnod0c3z1ialfvm88kyxeu94f3zb928q4h08kllx2df8nxjhhqg:latest/confusion_matrix_table.table.json",
         "ncols": 3
       }
     ],

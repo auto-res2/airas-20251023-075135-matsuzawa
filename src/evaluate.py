@@ -104,7 +104,8 @@ def _plot_confusion_matrix(cm: np.ndarray, classes: List[str], path: Path, run_i
 
 
 def _bar_chart(path: Path, metric_dict: Dict[str, float], metric_name: str) -> str:
-    plt.figure(figsize=(12, 7))
+    # Increase width to accommodate longer labels
+    plt.figure(figsize=(14, 7))
     x_labels = list(metric_dict.keys())
     values = list(metric_dict.values())
 
@@ -119,21 +120,29 @@ def _bar_chart(path: Path, metric_dict: Dict[str, float], metric_name: str) -> s
             va = "bottom" if v >= 0 else "top"
             plt.text(i, v + offset, f"{v:.4f}", ha="center", va=va, fontsize=12, fontweight='bold')
         else:
-            offset = max(values) * 0.02
+            offset = max(values) * 0.02 if metric_name == "accuracy" else max(values) * 0.02
             plt.text(i, v + offset, f"{v:.3f}", ha="center", va="bottom", fontsize=12, fontweight='bold')
 
-    # Shorten labels for better readability
+    # Better label handling: use abbreviated names
     shortened_labels = []
     for label in x_labels:
-        if len(label) > 30:
-            # Split on hyphens and keep important parts
+        # For long labels, replace common parts with abbreviations
+        if len(label) > 25:
+            # Keep first part (proposed/comparative) and last meaningful parts
             parts = label.split('-')
-            shortened = '\n'.join(['-'.join(parts[i:i+2]) for i in range(0, len(parts), 2)])
-            shortened_labels.append(shortened)
+            if len(parts) >= 3:
+                # Format: "proposed-Small-CNN-1.2M-CIFAR-10" -> "proposed\nSmall-CNN\n1.2M-CIFAR-10"
+                if parts[0] in ['proposed', 'comparative'] and len(parts) > 4:
+                    shortened = f"{parts[0]}\n{parts[1]}-{parts[2]}\n{'-'.join(parts[3:])}"
+                else:
+                    shortened = label
+            else:
+                shortened = label
         else:
-            shortened_labels.append(label)
+            shortened = label
+        shortened_labels.append(shortened)
 
-    plt.xticks(range(len(x_labels)), shortened_labels, rotation=0, ha='center', fontsize=11)
+    plt.xticks(range(len(x_labels)), shortened_labels, rotation=0, ha='center', fontsize=12)
     plt.ylabel(metric_name.replace('_', ' ').title(), fontsize=14, fontweight='bold')
     plt.title(f"Comparison: {metric_name.replace('_', ' ').title()}", fontsize=16, fontweight='bold', pad=15)
     plt.grid(axis='y', alpha=0.3, linestyle='--')
@@ -141,10 +150,8 @@ def _bar_chart(path: Path, metric_dict: Dict[str, float], metric_name: str) -> s
 
     # Set y-axis for better visibility of differences
     if metric_name == "accuracy":
-        # Zoom in on the data range for better visibility of differences
-        y_min = max(0, min(values) * 0.95)
-        y_max = min(1.0, max(values) * 1.05)
-        plt.ylim(bottom=y_min, top=y_max)
+        # Start from 0 for proper visual representation
+        plt.ylim(bottom=0, top=1.0)
     else:
         # For relative improvement, add padding to y-axis
         y_range = max(values) - min(values)
@@ -159,7 +166,8 @@ def _bar_chart(path: Path, metric_dict: Dict[str, float], metric_name: str) -> s
 
 
 def _box_plot(path: Path, metric_dict: Dict[str, float], metric_name: str) -> str:
-    plt.figure(figsize=(12, 7))
+    # Increase width to accommodate longer labels
+    plt.figure(figsize=(14, 7))
     df = pd.DataFrame({"run": list(metric_dict.keys()), metric_name: list(metric_dict.values())})
 
     # Use hue parameter to avoid deprecation warning
@@ -168,18 +176,27 @@ def _box_plot(path: Path, metric_dict: Dict[str, float], metric_name: str) -> st
     # Add individual points to show actual values
     sns.stripplot(x="run", y=metric_name, data=df, color='black', size=8, alpha=0.6, jitter=False)
 
-    # Shorten labels for better readability
+    # Better label handling: use abbreviated names
     x_labels = list(metric_dict.keys())
     shortened_labels = []
     for label in x_labels:
-        if len(label) > 30:
+        # For long labels, replace common parts with abbreviations
+        if len(label) > 25:
+            # Keep first part (proposed/comparative) and last meaningful parts
             parts = label.split('-')
-            shortened = '\n'.join(['-'.join(parts[i:i+2]) for i in range(0, len(parts), 2)])
-            shortened_labels.append(shortened)
+            if len(parts) >= 3:
+                # Format: "proposed-Small-CNN-1.2M-CIFAR-10" -> "proposed\nSmall-CNN\n1.2M-CIFAR-10"
+                if parts[0] in ['proposed', 'comparative'] and len(parts) > 4:
+                    shortened = f"{parts[0]}\n{parts[1]}-{parts[2]}\n{'-'.join(parts[3:])}"
+                else:
+                    shortened = label
+            else:
+                shortened = label
         else:
-            shortened_labels.append(label)
+            shortened = label
+        shortened_labels.append(shortened)
 
-    plt.xticks(range(len(x_labels)), shortened_labels, rotation=0, ha='center', fontsize=11)
+    plt.xticks(range(len(x_labels)), shortened_labels, rotation=0, ha='center', fontsize=12)
     plt.xlabel("Run", fontsize=14, fontweight='bold')
     plt.ylabel(metric_name.replace('_', ' ').title(), fontsize=14, fontweight='bold')
     plt.title(f"Comparison: {metric_name.replace('_', ' ').title()} Distribution", fontsize=16, fontweight='bold', pad=15)
@@ -188,10 +205,8 @@ def _box_plot(path: Path, metric_dict: Dict[str, float], metric_name: str) -> st
 
     # Set y-axis for better visibility of differences
     if metric_name == "accuracy":
-        values_list = list(metric_dict.values())
-        y_min = min(values_list) * 0.95
-        y_max = max(values_list) * 1.05
-        plt.ylim(bottom=y_min, top=min(1.0, y_max))
+        # Start from 0 for proper visual representation
+        plt.ylim(bottom=0, top=1.0)
 
     plt.tight_layout()
     fname = f"comparison_{metric_name}_boxplot.pdf"
