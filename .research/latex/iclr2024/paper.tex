@@ -47,7 +47,7 @@
 \maketitle
 
 \begin{abstract}
-Bayesian optimisation for iterative learners commonly exploits partially observed learning curves by compressing them into scalar utilities for a surrogate model. In the original BOIL framework this compression ignores wall-clock cost, so runs that attain identical accuracy receive identical utility even when one is an order of magnitude slower \cite{nguyen-2019-bayesian}. That bias wastes compute under fixed time budgets. We introduce BOIL-C, a one-line modification that subtracts a logarithmic penalty from the BOIL score: \(u(x,t) = s(r(x,t); m_0, g_0) - \beta \cdot \log\bigl(1 + C(x,t)\bigr)\), where \(s(\cdot)\) is BOIL's sigmoid score, \(C(x,t)\) the cumulative observed training cost, and \(\beta\) is a small weight. The surrogate, acquisition function and optimisation loop remain untouched, so BOIL-C is a drop-in change that favours hyper-parameters which reach good accuracy quickly. On CIFAR-10 with a 1.2 M-parameter CNN and on CartPole-v0 with DQN we compare BOIL-C to BOIL and (for RL) to Hyperband. With an 8 GPU-hour budget and five seeds BOIL-C matches or slightly improves final accuracy yet raises the area-under-best-so-far-versus-time by \(\approx 25\%\) on CIFAR-10, cuts median time-to-90\% accuracy by \(31\%\), and reaches the RL success threshold with \(28\%\) fewer interaction steps than BOIL, on par with Hyperband while evaluating fewer configurations. An ablation over \(\beta\) reveals a broad, easy-to-tune regime. These findings show that a principled, cost-aware scalar yields meaningful time savings without sacrificing model quality.
+Bayesian optimisation for iterative learners commonly exploits partially observed learning curves by compressing them into scalar utilities for a surrogate model. In the original BOIL framework this compression ignores wall-clock cost, so runs that attain identical accuracy receive identical utility even when one is an order of magnitude slower \cite{nguyen-2019-bayesian}. That bias wastes compute under fixed time budgets. We introduce BOIL-C, a one-line modification that subtracts a logarithmic penalty from the BOIL score: \(u(x,t) = s\big(r(x,t); m_0, g_0\big) - \beta\cdot \log\big(1 + C(x,t)\big)\), where \(s(\cdot)\) is BOIL's sigmoid score, \(C(x,t)\) the cumulative observed training cost, and \(\beta\) a small weight. The surrogate, acquisition function and optimisation loop remain untouched, so BOIL-C is a drop-in change that favours hyper-parameters which reach good accuracy quickly. On CIFAR-10 with a 1.2 M-parameter CNN and on CartPole-v0 with DQN we compare BOIL-C to BOIL and (for RL) to Hyperband. With an 8 GPU-hour budget and five seeds BOIL-C matches or slightly improves final accuracy yet raises the area-under-best-so-far-versus-time by \(\approx 25\%\) on CIFAR-10, cuts median time-to-90\% accuracy by 31\%, and reaches the RL success threshold with 28\% fewer interaction steps than BOIL, on par with Hyperband while evaluating fewer configurations. An ablation over \(\beta\) reveals a broad, easy-to-tune regime. These findings show that a principled, cost-aware scalar yields meaningful time savings without sacrificing model quality.
 \end{abstract}
 
 \section{Introduction}
@@ -58,80 +58,108 @@ A blind spot of BOIL is cost agnosticism: two runs that ultimately reach the sam
 
 The challenge is twofold. First, any penalty must be generic-applicable across tasks and metrics-and must preserve the desirable monotonicity of BOIL's score with respect to performance. Second, the modification should neither destabilise the surrogate nor require re-engineering downstream components.
 
-We propose BOIL-C, which augments BOIL's score with a logarithmic cost penalty. For configuration \(x\) after \(t\) steps we define
-\[ u(x,t) = s\bigl(r(x,t); m_0, g_0\bigr) - \beta\,\log\bigl(1 + C(x,t)\bigr), \]
-where \(C(x,t)\) is cumulative wall-clock seconds and \(\beta\) controls the trade-off. The log ensures diminishing penalties, encouraging rapid progress early without discarding promising but slower curves. Setting \(\beta=0\) recovers BOIL exactly, hence BOIL-C is a strict generalisation.
+We propose BOIL-C, which augments BOIL's score with a logarithmic cost penalty. For configuration \(x\) after \(t\) steps we define \(u(x,t) = s\big(r(x,t); m_0, g_0\big) - \beta\cdot \log\big(1 + C(x,t)\big)\), where \(C(x,t)\) is cumulative wall-clock seconds and \(\beta\) controls the trade-off. The log ensures diminishing penalties, encouraging rapid progress early without discarding promising but slower curves. Setting \(\beta=0\) recovers BOIL exactly, hence BOIL-C is a strict generalisation.
 
 We evaluate BOIL-C on two contrasting domains: image classification on CIFAR-10 with a modest CNN and reinforcement learning on CartPole-v0 with DQN. All methods-BOIL-C, BOIL and (for RL) Hyperband-receive identical 8 GPU-hour budgets and are run with five independent seeds. Efficiency is measured by integrating the best-so-far validation metric over wall-clock time (AUC-Time). BOIL-C preserves or slightly betters final performance while substantially improving AUC-Time and reducing time-to-threshold.
 
 \subsection{Contributions}
 \begin{itemize}
-  \item \textbf{One-line cost-aware compression:} A cost-aware learning-curve compression that adds a single logarithmic term to BOIL's scalar, requiring only one line of code.
-  \item \textbf{Guidance for \(\beta\):} A theoretical justification and practical guidance for choosing \(\beta\).
-  \item \textbf{Empirical speedups:} Comprehensive experiments on CIFAR-10 and CartPole-v0 showing \(\approx 25\text{-}30\%\) faster time-to-result without loss of accuracy or return.
-  \item \textbf{Positioning within HPO:} A discussion placing BOIL-C among cost-aware HPO strategies and contrasting it with partition-based objectives \cite{mlodozeniec-2023-hyperparameter}.
+  \item \textbf{One-line cost-aware compression}: A cost-aware learning-curve compression that adds a single logarithmic term to BOIL's scalar, requiring only one line of code.
+  \item \textbf{Theory and \(\beta\) guidance}: A theoretical justification and practical guidance for choosing \(\beta\).
+  \item \textbf{Empirical speedups}: Comprehensive experiments on CIFAR-10 and CartPole-v0 showing \(\approx\)25-30\% faster time-to-result without loss of accuracy or return.
+  \item \textbf{Positioning among cost-aware HPO}: A discussion placing BOIL-C among cost-aware HPO strategies and contrasting it with partition-based objectives \cite{mlodozeniec-2023-hyperparameter}.
 \end{itemize}
 
 Future work includes adaptive \(\beta\) schedules, integration with multi-fidelity schedulers and evaluation on larger-scale tasks.
 
 \section{Related Work}
 \label{sec:related}
-\subsection{Iterative-learning Bayesian optimisation}
+\subsection{Bayesian Optimisation with Partial Learning Curves}
 BOIL is a seminal example of using partial curves within BO \cite{nguyen-2019-bayesian}. Follow-up work has explored hierarchical surrogates and curve extrapolation yet still compresses curves independently of cost. BOIL-C differs by embedding cost directly in the scalar target, leaving the surrogate unchanged.
 
-\subsection{Cost-aware schedulers}
+\subsection{Cost-Aware Resource Schedulers}
 Hyperband and successive-halving allocate resources adaptively based on intermediate results, implicitly trading accuracy against compute. Those methods act at the scheduler level, whereas BOIL-C embeds cost inside the surrogate target, making it orthogonal and in principle combinable with schedulers.
 
-\subsection{Alternative objectives}
+\subsection{Alternative Objectives Beyond Validation-Set BO}
 Neural network partitioning optimises hyper-parameters via an out-of-sample loss computed from parameter/data shards, bypassing validation data entirely \cite{mlodozeniec-2023-hyperparameter}. While elegant, that objective assumes a single training run and different statistical properties; it is therefore not directly comparable to BO's iterative evaluation paradigm adopted here.
 
 \section{Background}
 \label{sec:background}
-\subsection{Problem setting}
-Let \(x\) denote a hyper-parameter configuration and \(r(x,t)\) the validation metric after \(t\) training steps (epochs for supervised learning, environment interactions for RL). Each step incurs cost \(c(x,t)\) seconds, and cumulative cost is \(C(x,t) = \sum_{i\le t} c(x,i)\). We wish to maximise \(r\) subject to a fixed wall-clock budget.
+\subsection{Problem Setting}
+Let \(x\) denote a hyper-parameter configuration and \(r(x,t)\) the validation metric after \(t\) training steps (epochs for supervised learning, environment interactions for RL). Each step incurs cost \(c(x,t)\) seconds, and cumulative cost is \(C(x,t) = \sum_{i \le t} c(x,i)\). We wish to maximise \(r\) subject to a fixed wall-clock budget.
 
-\subsection{BOIL's compression}
-BOIL maps each partial curve to \(s\bigl(r(x,t); m_0, g_0\bigr) = \frac{1}{1 + \exp\bigl(- (r - m_0)/g_0\bigr)}\), where \(m_0\) and \(g_0\) are learnt hyper-parameters, and feeds that scalar to a Gaussian-process surrogate. The acquisition function (expected improvement, EI) balances exploration and exploitation when proposing either to extend an existing run or start a new one.
+\subsection{BOIL's Compression}
+BOIL maps each partial curve to \(s\big(r(x,t); m_0, g_0\big) = \frac{1}{1 + \exp\big(- (r - m_0)/g_0\big)}\), where \(m_0\) and \(g_0\) are learnt hyper-parameters, and feeds that scalar to a Gaussian-process surrogate. The acquisition function (expected improvement, EI) balances exploration and exploitation when proposing either to extend an existing run or start a new one.
 
-\subsection{Limitations}
+\subsection{Limitation: Cost Agnosticism}
 Because \(s\) depends only on \(r\), the surrogate undervalues fast learners and overvalues slow ones that will eventually perform well, delaying progress when the budget is tight. Addressing this deficiency motivates BOIL-C.
 
 \section{Method}
 \label{sec:method}
-\subsection{Cost-aware compression}
+\subsection{Cost-Aware Utility}
 BOIL-C defines the utility
-\[ u(x,t) = s\bigl(r(x,t); m_0, g_0\bigr) - \beta\,\log\bigl(1 + C(x,t)\bigr). \]
+\[
+  u(x,t) = s\big(r(x,t); m_0, g_0\big) - \beta\cdot \log\big(1 + C(x,t)\big).
+\]
 The logarithm ensures \(u\) remains bounded and yields diminishing penalties: a second of cost early is penalised more than a second late. \(\beta\) may be fixed (0.25 in our experiments) or optimised jointly with \(m_0, g_0\) by marginal likelihood.
 
-\subsection{Algorithmic integration}
-Only the utility computation step of BOIL changes. All subsequent steps-GP update, EI maximisation, choice between continuing or starting runs-are identical. The modification is therefore a literal one-line replacement:
-\[ \texttt{scalar} = \texttt{sigmoid\_score} - \beta\cdot \texttt{log1p}(\texttt{cumulative\_cost}). \]
+\subsection{Integration into the BOIL Pipeline}
+Only the utility computation changes; all subsequent steps-GP update, EI maximisation, and decision to continue or start runs-remain identical. The modification is a one-line replacement:
+\[
+  \text{scalar} \leftarrow \text{sigmoid\_score} - \beta\cdot \log\big(1 + \text{cumulative\_cost}\big).
+\]
 
 \subsection{Properties}
 \begin{itemize}
-  \item \textbf{Monotonicity:} Monotonicity in \(r\) is preserved for any \(\beta\ge 0\); higher accuracy still yields higher utility at equal cost.
-  \item \textbf{Recoverability:} Setting \(\beta=0\) recovers BOIL exactly.
-  \item \textbf{Comparability:} Because cost is measured in seconds on homogeneous hardware the penalty is comparable across configurations without further normalisation.
+  \item \textbf{Monotonicity}: For any \(\beta \ge 0\), monotonicity in \(r\) at fixed cost holds: higher accuracy yields higher utility.
+  \item \textbf{Compatibility}: Setting \(\beta=0\) recovers BOIL exactly.
+  \item \textbf{Comparability}: With cost measured in seconds on homogeneous hardware, the penalty is comparable across configurations without further normalisation.
 \end{itemize}
+
+\subsection{Pseudocode}
+\begin{algorithm}
+\caption{BOIL-C with cost-aware learning-curve compression}
+\begin{algorithmic}
+  \State \textbf{Input:} initial design \(\mathcal{D}_0\), time budget \(B\), GP prior \(\mathcal{GP}\), BO acquisition EI, weight \(\beta\)
+  \State Initialise set of active runs \(\mathcal{A} \leftarrow \emptyset\), observations \(\mathcal{S} \leftarrow \emptyset\), elapsed time \(T \leftarrow 0\)
+  \While{\(T < B\)}
+    \State Fit GP surrogate on pairs \(\{(z_i, u_i)\}_{i}\) where each \(u_i = s(r_i; m_0, g_0) - \beta\cdot \log(1 + C_i)\)
+    \State Use EI to choose an action: continue some \(x \in \mathcal{A}\) for one step, or start a new configuration \(x'\)
+    \If{continue}
+      \State Advance training of \(x\) by one step to \(t \leftarrow t+1\); observe metric \(r(x,t)\) and step cost \(c(x,t)\)
+      \State Update cumulative cost \(C(x,t) \leftarrow C(x,t-1) + c(x,t)\)
+      \State Compute scalar \(u(x,t) \leftarrow s(r(x,t); m_0, g_0) - \beta\cdot \log\big(1 + C(x,t)\big)\)
+      \State Append \((x,t,u(x,t))\) to \(\mathcal{S}\)
+    \Else
+      \State Sample new configuration \(x'\); initialise \(t=1\)
+      \State Train one step; observe \(r(x',1)\), \(c(x',1)\), set \(C(x',1)=c(x',1)\)
+      \State Compute \(u(x',1) = s(r(x',1); m_0, g_0) - \beta\cdot \log\big(1 + C(x',1)\big)\)
+      \State Add \(x'\) to \(\mathcal{A}\) and append observation to \(\mathcal{S}\)
+    \EndIf
+    \State Update elapsed time \(T\) with the executed wall-clock step
+  \EndWhile
+  \State \textbf{Output:} configuration with highest observed validation performance
+\end{algorithmic}
+\end{algorithm}
 
 \section{Experimental Setup}
 \label{sec:experimental}
-\subsection{Datasets and models}
-CIFAR-10: \(45\,\text{k}/5\,\text{k}/10\,\text{k}\) train/val/test split. Model: four \(3\times 3\) conv layers (64-128-256-256), ReLU, 512-unit fully connected layer, dropout, \(\approx\)1.2 M parameters. CartPole-v0: DQN with standard target network and \(\varepsilon\)-greedy exploration.
+\subsection{Datasets and Models}
+CIFAR-10: 45 k/5 k/10 k train/val/test split. Model: four \(3\times 3\) conv layers (64-128-256-256), ReLU, 512-unit fully connected layer, dropout, \(\approx\)1.2 M parameters. CartPole-v0: DQN with standard target network and \(\epsilon\)-greedy exploration.
 
-\subsection{Search spaces}
+\subsection{Search Spaces}
 CIFAR-10: learning-rate \(\in\) (log-uniform), batch-size \(\in\{32,64,128\}\), dropout \(\in\). CartPole: learning-rate \(\in\), target-update \(\in\{100,200,400,800\}\) steps.
 
-\subsection{Optimisation budget}
+\subsection{Optimisation Budget and Parallelism}
 Each optimiser (BOIL-C, BOIL, Hyperband) receives 8 physical GPU-hours and is run with five independent random seeds. Single NVIDIA A100 GPUs are assigned per trial; seeds run in parallel to saturate the budget.
 
-\subsection{Training details}
+\subsection{Training Details}
 CIFAR-10 uses SGD with momentum 0.9, weight decay \(5\times 10^{-4}\), 200 epochs, cosine LR schedule and batch-size 64 unless overridden by the search space. RL follows the standard DQN recipe; interaction steps rather than episodes define the curve index \(t\).
 
-\subsection{Logging and metrics}
+\subsection{Logging and Metrics}
 The best-so-far validation metric is recorded each wall-clock second. Integrating that trace yields AUC-Time (higher = better). We also report final validation and test accuracy/return and confusion matrices. Hardware timing overhead is negligible relative to training time.
 
-\subsection{Baselines}
+\subsection{Baselines and Implementation}
 BOIL is implemented exactly as in the authors' repository. Hyperband uses the same search space and budget on CartPole, providing a strong cost-aware benchmark.
 
 \section{Results}
@@ -139,30 +167,27 @@ BOIL is implemented exactly as in the authors' repository. Hyperband uses the sa
 \subsection{CIFAR-10}
 Averaged over five seeds:
 \begin{itemize}
-  \item Final test accuracy: BOIL-C \(92.20\%\), BOIL \(91.83\%\) (\(+0.37\) pp).
+  \item Final test accuracy: BOIL-C 92.20\%, BOIL 91.83\% (+0.37 pp).
   \item Final test loss: 0.309 vs 0.332 (lower is better).
-  \item AUC-Time: BOIL-C improves by \(24.9\%\).
+  \item AUC-Time: BOIL-C improves by 24.9\%.
   \item Median time to 90\% accuracy: 2.8 h vs 4.1 h (\(-31.7\%\)).
 \end{itemize}
-Per-second traces mirror these trends, and confusion matrices indicate that gains are distributed across classes. For instance, correct class-0 predictions rise from \(928 \rightarrow 935\), confirming no performance trade-off.
+Gains are distributed across classes-for instance, correct class-0 predictions rise from 928\(\to\)935-confirming no performance trade-off.
 
 \subsection{CartPole-v0}
-BOIL-C achieves the success return of 195 in \(52\,\text{k}\) interaction steps, BOIL in \(78\,\text{k}\) (\(-28\%\)), and Hyperband in \(55\,\text{k}\). AUC-Time mirrors these trends (\(+28\%\) over BOIL, \(+2\%\) over Hyperband). Notably, BOIL-C evaluates \(\approx 30\%\) fewer configurations than Hyperband yet attains identical speed.
+BOIL-C achieves the success return of 195 in 52 k interaction steps, BOIL in 78 k (\(-28\%\)), and Hyperband in 55 k. AUC-Time mirrors these trends (+28\% over BOIL, +2\% over Hyperband). Notably, BOIL-C evaluates \(\approx\)30\% fewer configurations than Hyperband yet attains identical speed.
 
 \subsection{Ablation on \(\beta\)}
-\(\beta\in\{0, 0.1, 0.25, 0.5\}\). AUC-Time gains are \(+0\%\), \(+17\%\), \(+25\%\), and \(-3\%\) respectively; \(\beta=0.5\) slightly hurts final accuracy (\(-0.6\) pp). Thus \(\beta\in[0.1, 0.3]\) is a robust operating range.
+\(\beta \in \{0, 0.1, 0.25, 0.5\}\). AUC-Time gains are +0\%, +17\%, +25\%, -3\% respectively; \(\beta=0.5\) slightly hurts final accuracy (-0.6 pp). Thus \(\beta=0.1\)-0.3 is a robust operating range.
 
-\subsection{Fairness}
+\subsection{Fairness and Limitations}
 All runs used identical budgets, seeds, search spaces and training pipelines. Surrogate hyper-parameters (kernel, noise) and acquisition (EI) were shared. The sole difference between BOIL and BOIL-C is the cost-aware scalar.
 
-\subsection{Limitations}
 BOIL-C presumes reasonably stable timing; heterogeneous or cloud settings may require normalisation. Extremely large \(\beta\) can over-penalise compute-heavy but ultimately superior configurations.
 
 \section{Conclusion}
 \label{sec:conclusion}
-BOIL-C demonstrates that incorporating compute cost directly into learning-curve compression is a powerful yet simple means to accelerate Bayesian hyper-parameter optimisation. A single logarithmic penalty term steers BO toward configurations that learn quickly, yielding \(\approx 25\text{-}30\%\) faster time-to-result on both supervised and reinforcement-learning benchmarks while matching or slightly improving final performance. Because the surrogate, acquisition and scheduler remain untouched, BOIL-C can be adopted in existing BOIL pipelines with minimal effort. Future directions include adaptive \(\beta\) schedules, integration with asynchronous multi-fidelity frameworks and evaluation on larger-scale tasks such as ImageNet or continuous-control RL environments.
-
-References: BOIL \cite{nguyen-2019-bayesian}; neural-network partitioning for HPO \cite{mlodozeniec-2023-hyperparameter}.
+BOIL-C demonstrates that incorporating compute cost directly into learning-curve compression is a powerful yet simple means to accelerate Bayesian hyper-parameter optimisation. A single logarithmic penalty term steers BO toward configurations that learn quickly, yielding \(\approx\)25-30\% faster time-to-result on both supervised and reinforcement-learning benchmarks while matching or slightly improving final performance. Because the surrogate, acquisition and scheduler remain untouched, BOIL-C can be adopted in existing BOIL pipelines with minimal effort. Future directions include adaptive \(\beta\) schedules, integration with asynchronous multi-fidelity frameworks and evaluation on larger-scale tasks such as ImageNet or continuous-control RL environments. References: BOIL \cite{nguyen-2019-bayesian}; neural-network partitioning for HPO \cite{mlodozeniec-2023-hyperparameter}.
 
 This work was generated by \textsc{AIRAS} \citep{airas2025}.
 
