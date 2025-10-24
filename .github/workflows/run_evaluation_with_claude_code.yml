@@ -93,7 +93,7 @@ jobs:
       - name: Claude Code Autonomous Run, Fix, and Validate Loop
         uses: anthropics/claude-code-action@v1
         env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: ${{ env.PROMPT }}
