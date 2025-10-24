@@ -1,0 +1,16 @@
+{
+  "per_run": {
+    "proposed-Small-CNN-1.2M-CIFAR-10": 0.922,
+    "comparative-1-Small-CNN-1.2M-CIFAR-10": 0.9183
+  },
+  "baseline_id": "proposed-Small-CNN-1.2M-CIFAR-10",
+  "baseline_value": 0.922,
+  "absolute_difference": {
+    "proposed-Small-CNN-1.2M-CIFAR-10": 0.0,
+    "comparative-1-Small-CNN-1.2M-CIFAR-10": -0.0037000000000000366
+  },
+  "relative_improvement": {
+    "proposed-Small-CNN-1.2M-CIFAR-10": 0.0,
+    "comparative-1-Small-CNN-1.2M-CIFAR-10": -0.004013015184381818
+  }
+}
