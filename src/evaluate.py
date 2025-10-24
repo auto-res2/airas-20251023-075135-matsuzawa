@@ -25,55 +25,90 @@ sns.set(style="whitegrid")
 
 def _plot_learning_curve(path: Path, history: pd.DataFrame, run_id: str) -> str:
     plt.figure(figsize=(6, 4))
-    if "train_acc" in history:
-        sns.lineplot(x=history["epoch"], y=history["train_acc"], label="train_acc")
-    if "val_acc" in history:
-        sns.lineplot(x=history["epoch"], y=history["val_acc"], label="val_acc")
-    if "test_acc" in history:
-        sns.lineplot(x=history["epoch"], y=history["test_acc"], label="test_acc")
-    plt.xlabel("Epoch")
-    plt.ylabel("Accuracy")
-    plt.legend()
+    has_data = False
+    if "train_acc" in history.columns and not history["train_acc"].isna().all():
+        plt.plot(history["epoch"], history["train_acc"], label="Train Accuracy", linewidth=2)
+        has_data = True
+    if "val_acc" in history.columns and not history["val_acc"].isna().all():
+        plt.plot(history["epoch"], history["val_acc"], label="Val Accuracy", linewidth=2)
+        has_data = True
+    if "test_acc" in history.columns and not history["test_acc"].isna().all():
+        plt.plot(history["epoch"], history["test_acc"], label="Test Accuracy", linewidth=2)
+        has_data = True
+    plt.xlabel("Epoch", fontsize=12)
+    plt.ylabel("Accuracy", fontsize=12)
+    if has_data:
+        plt.legend(fontsize=10, loc='best')
+    plt.title(f"Learning Curve: {run_id}", fontsize=12)
+    plt.grid(True, alpha=0.3)
     plt.tight_layout()
     fname = f"{run_id}_learning_curve.pdf"
-    plt.savefig(path / fname)
+    plt.savefig(path / fname, dpi=300, bbox_inches='tight')
     plt.close()
     return str(path / fname)
 
 
 def _plot_confusion_matrix(cm: np.ndarray, classes: List[str], path: Path, run_id: str) -> str:
-    plt.figure(figsize=(6, 5))
-    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=classes, yticklabels=classes)
-    plt.ylabel("True label")
-    plt.xlabel("Predicted label")
-    plt.title("Confusion Matrix")
+    plt.figure(figsize=(8, 7))
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=classes, yticklabels=classes,
+                annot_kws={"fontsize": 10}, cbar_kws={"shrink": 0.8})
+    plt.ylabel("True label", fontsize=12)
+    plt.xlabel("Predicted label", fontsize=12)
+    plt.title("Confusion Matrix", fontsize=14)
+    plt.xticks(fontsize=10)
+    plt.yticks(fontsize=10)
     plt.tight_layout()
     fname = f"{run_id}_confusion_matrix.pdf"
-    plt.savefig(path / fname)
+    plt.savefig(path / fname, dpi=300, bbox_inches='tight')
     plt.close()
     return str(path / fname)
 
 
 def _bar_chart(path: Path, metric_dict: Dict[str, float], metric_name: str) -> str:
-    plt.figure(figsize=(6, 4))
-    sns.barplot(x=list(metric_dict.keys()), y=list(metric_dict.values()))
-    for i, v in enumerate(metric_dict.values()):
-        plt.text(i, v + (0.01 if metric_name != "relative_improvement" else 0.001), f"{v:.3f}", ha="center", va="bottom")
-    plt.ylabel(metric_name)
+    plt.figure(figsize=(10, 6))
+    x_labels = list(metric_dict.keys())
+    values = list(metric_dict.values())
+    bars = plt.bar(range(len(x_labels)), values, color='steelblue', alpha=0.8)
+
+    # Annotate bars with values
+    for i, v in enumerate(values):
+        offset = max(values) * 0.02 if metric_name != "relative_improvement" else 0.0005
+        plt.text(i, v + offset, f"{v:.3f}", ha="center", va="bottom", fontsize=11, fontweight='bold')
+
+    plt.xticks(range(len(x_labels)), x_labels, rotation=15, ha='right', fontsize=10)
+    plt.ylabel(metric_name.replace('_', ' ').title(), fontsize=12)
+    plt.title(f"Comparison: {metric_name.replace('_', ' ').title()}", fontsize=14)
+    plt.grid(axis='y', alpha=0.3)
+
+    # Set y-axis to start from 0 for accuracy, auto for relative improvement
+    if metric_name == "accuracy":
+        plt.ylim(bottom=0)
+
     plt.tight_layout()
     fname = f"comparison_{metric_name}_bar_chart.pdf"
-    plt.savefig(path / fname)
+    plt.savefig(path / fname, dpi=300, bbox_inches='tight')
     plt.close()
     return str(path / fname)
 
 
 def _box_plot(path: Path, metric_dict: Dict[str, float], metric_name: str) -> str:
-    plt.figure(figsize=(6, 4))
+    plt.figure(figsize=(10, 6))
     df = pd.DataFrame({"run": list(metric_dict.keys()), metric_name: list(metric_dict.values())})
-    sns.boxplot(x="run", y=metric_name, data=df)
+    sns.boxplot(x="run", y=metric_name, data=df, palette="Set2")
+
+    plt.xticks(rotation=15, ha='right', fontsize=10)
+    plt.xlabel("Run", fontsize=12)
+    plt.ylabel(metric_name.replace('_', ' ').title(), fontsize=12)
+    plt.title(f"Comparison: {metric_name.replace('_', ' ').title()} Distribution", fontsize=14)
+    plt.grid(axis='y', alpha=0.3)
+
+    # Set y-axis to start from 0 for accuracy for consistency with bar chart
+    if metric_name == "accuracy":
+        plt.ylim(bottom=0, top=1.0)
+
     plt.tight_layout()
     fname = f"comparison_{metric_name}_boxplot.pdf"
-    plt.savefig(path / fname)
+    plt.savefig(path / fname, dpi=300, bbox_inches='tight')
     plt.close()
     return str(path / fname)
 
