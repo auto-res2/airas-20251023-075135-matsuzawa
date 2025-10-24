@@ -1,0 +1,26 @@
+\begin{thebibliography}{3}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Mlodozeniec et~al.(2023)Mlodozeniec, Reisser, and
+  Louizos]{mlodozeniec-2023-hyperparameter}
+Bruno Mlodozeniec, Matthias Reisser, and Christos Louizos.
+\newblock Hyperparameter optimization through neural network partitioning.
+\newblock 2023.
+
+\bibitem[Nguyen et~al.(2019)Nguyen, Schulze, and Osborne]{nguyen-2019-bayesian}
+Vu~Nguyen, Sebastian Schulze, and Michael~A Osborne.
+\newblock Bayesian optimization for iterative learning.
+\newblock 2019.
+
+\bibitem[Tanaka et~al.(2025)Tanaka, Matsuzawa, Yoshino, Horiguchi, Takagi,
+  Yamauchi, and Kumagai]{airas2025}
+Toma Tanaka, Takumi Matsuzawa, Yuki Yoshino, Ilya Horiguchi, Shiro Takagi,
+  Ryutaro Yamauchi, and Wataru Kumagai.
+\newblock {AIRAS}, 2025.
+\newblock URL \url{https://github.com/airas-org/airas}.
+
+\end{thebibliography}

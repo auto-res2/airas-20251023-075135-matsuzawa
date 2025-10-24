@@ -1,0 +1,49 @@
+This is BibTeX, Version 0.99d (TeX Live 2023/Debian)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: paper.aux
+The style file: iclr2024_conference.bst
+Database file #1: references.bib
+Warning--empty journal in mlodozeniec-2023-hyperparameter
+Warning--empty journal in nguyen-2019-bayesian
+You've used 3 entries,
+            2773 wiz_defined-function locations,
+            607 strings with 5307 characters,
+and the built_in function-call counts, 1469 in all, are:
+= -- 112
+> -- 126
+< -- 0
++ -- 42
+- -- 39
+* -- 128
+:= -- 241
+add.period$ -- 9
+call.type$ -- 3
+change.case$ -- 22
+chr.to.int$ -- 3
+cite$ -- 8
+duplicate$ -- 56
+empty$ -- 96
+format.name$ -- 42
+if$ -- 289
+int.to.chr$ -- 1
+int.to.str$ -- 1
+missing$ -- 2
+newline$ -- 23
+num.names$ -- 12
+pop$ -- 51
+preamble$ -- 1
+purify$ -- 19
+quote$ -- 0
+skip$ -- 51
+stack$ -- 0
+substring$ -- 6
+swap$ -- 1
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 33
+warning$ -- 2
+while$ -- 9
+width$ -- 0
+write$ -- 41
+(There were 2 warnings)
