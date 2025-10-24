@@ -1,4 +1,4 @@
-name: Compile LaTeX with Agent
+name: Run Evaluation with Agent
 
 on:
   workflow_dispatch:
@@ -10,12 +10,15 @@ on:
         options:
           - open_code
           - claude_code
+      run_ids:
+        description: 'A JSON array of run_ids to process'
+        required: true
+      experiment_iteration:
+        description: "Iteration count"
+        required: true
       model_name:
         description: "Model to use for opencode"
         default: 'anthropic/claude-sonnet-4-5-20250929'
-      subdir:
-        description: 'Subdirectory under .research/latex/ (e.g., iclr2025)'
-        required: true
 
 permissions:
   id-token: write
@@ -26,36 +29,56 @@ defaults:
     shell: bash
 
 env:
-  LATEX_DIR: .research/latex/${{ github.event.inputs.subdir }}
-  CHKTEX_COMMAND: |
+  RESULTS_DIR: ".research/iteration${{ github.event.inputs.experiment_iteration }}"
+
+  SYNC_COMMAND: "uv sync"
+  EVALUATION_COMMAND: |
     set -e
-    echo "=== [PHASE 1/2] Running ChkTeX... ==="
-    chktex -q paper.tex
-  COMPILE_COMMAND: |
-    set -e
-    echo "=== [PHASE 2/2] Compiling LaTeX document... ==="
-    pdflatex -interaction=nonstopmode paper.tex
-    bibtex paper
-    pdflatex -interaction=nonstopmode paper.tex
-    pdflatex -interaction=nonstopmode paper.tex
+    echo "=== [EVALUATION] Start at $(date -u) ==="
+
+    uv run python -m src.evaluate \
+      results_dir="$RESULTS_DIR" \
+      run_ids='${{ inputs.run_ids }}'
+    echo "=== [EVALUATION] PASSED at $(date -u) ==="
   PROMPT: |
-    You are a fully autonomous AI assistant specializing in LaTeX document correction.
-    Your task is to ensure the LaTeX paper is free of chktex warnings and compiles successfully into a PDF. You will achieve this by executing, analyzing, fixing, and re-validating the document.
+    You are a fully autonomous AI research assistant.
+    Your task is to ensure the evaluation script runs successfully to completion to generate comparison figures and aggregated metrics, by executing, analyzing, fixing, and re-validating it.
     You have been granted full tool access.
 
     Guiding Principles:
-    - Scope: Do not perform any Git operations like commit or push. Your sole responsibility is to make the LaTeX document compilable.
-    - Method: When fixing errors, you MUST only modify existing files. Do not create new files.
-    - Minimal Edits: You MUST limit your changes to the absolute minimum required to fix LaTeX syntax, chktex warnings, or compilation errors.
-    - Autonomy: Execute all steps autonomously without asking for permission.
+    - Scope: Do not perform any Git operations like commit or push. Your sole responsibility is to make the code runnable.
+    - Method: When fixing errors, you MUST only modify existing files; do not create or delete any files.
+    - Autonomy: Execute all steps autonomously. Do not ask for permission.
 
     Procedure:
-    1.  Change Directory: First, change your working directory to `$LATEX_DIR`. All subsequent commands MUST be run from this directory.
-    2.  Run ChkTeX: Execute the command `bash -c "$CHKTEX_COMMAND"`.
-    3.  Analyze & Fix ChkTeX: If the command fails, you MUST analyze the chktex warnings from the output, fix the `paper.tex` file, and repeat step 2 until it passes.
-    4.  Run LaTeX Compile: Once chktex passes, execute `bash -c "$COMPILE_COMMAND"`.
-    5.  Analyze & Fix Compilation: If compilation fails, you MUST analyze the LaTeX errors (e.g., undefined control sequences, missing files, bad boxes), fix the `.tex` files, and repeat step 4 until it succeeds.
-    6.  Completion: Once both phases are complete, the task is finished.
+    1.  Initial Setup: First, run `bash -c "$SYNC_COMMAND"` to install dependencies.
+    2.  Run Evaluation: Execute `bash -c "$EVALUATION_COMMAND"` to generate comparison figures and aggregated metrics.
+    3.  Analyze & Fix Loop: If evaluation fails, you MUST analyze the error, use your tools to fix the code, and then re-run evaluation. Repeat this cycle until it succeeds.
+        A successful run is only confirmed when a message starting with `=== [EVALUATION] PASSED` is present in the output log.
+    4. Visual Quality Check: Once evaluation succeeds, you MUST:
+        a. Locate all generated figures in `$RESULTS_DIR`:
+          - Per-run figures in `$RESULTS_DIR/{run_id}/*.pdf` (or .png)
+          - Comparison figures in `$RESULTS_DIR/comparison/*.pdf` (or .png)
+
+        b. Read and analyze EACH figure by directly viewing the PDF/PNG files (do NOT use JSON files):
+          - Use the Read tool to open and view each generated PDF/PNG file
+          - Visually inspect each figure for quality issues:
+            - Font sizes: Are axis labels, titles, legends readable? (not too small/large)
+            - Scale consistency: Do comparison plots use consistent Y-axis ranges?
+            - Color distinction: Are different lines/bars easily distinguishable?
+            - Layout: Is tight_layout applied? Are elements overlapping?
+            - Annotations: Are important values annotated on the figures?
+            - Resolution: Is the figure clear and publication-quality?
+
+        c. If ANY figure has visual quality issues:
+          - Identify the specific problem (e.g., "font size too small", "inconsistent Y-axis scales")
+          - Modify `src/evaluate.py` to fix the visualization code
+          - Re-run the entire evaluation from step 2
+          - Repeat until ALL figures pass visual quality checks
+
+        d. Only exit successfully when:
+          - Evaluation completes without errors
+          - ALL generated figures meet publication-quality standards
 
 jobs:
   setup:
@@ -67,34 +90,14 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install LaTeX, ChkTeX, and other dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            chktex \
-            texlive-base \
-            texlive-latex-recommended \
-            texlive-fonts-recommended \
-            texlive-latex-extra \
-            texlive-science
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+          enable-cache: false
 
-      - name: Copy experiment images to LaTeX directory
-        run: |
-          LATEST_ITER=$(ls -d .research/iteration* 2>/dev/null | sort -V | tail -n 1)
-
-          if [ -z "$LATEST_ITER" ]; then
-            echo "No iteration directories found, skipping image copy"
-            exit 0
-          fi
-
-          echo "Copying images from $LATEST_ITER"
-          mkdir -p "${LATEX_DIR}/images"
-
-          find "$LATEST_ITER" -mindepth 2 -maxdepth 2 -type f -name "*.pdf" \
-            -exec cp {} "${LATEX_DIR}/images/" \;
-
-          echo "Image copy completed. Files in images/:"
-          ls -la "${LATEX_DIR}/images/" || echo "No images found"
+      - name: Prepare results dir
+        run: mkdir -p "$RESULTS_DIR"
 
       - name: Upload workspace artifact
         uses: actions/upload-artifact@v4
@@ -114,7 +117,7 @@ jobs:
         with:
           name: workspace
           path: .
-
+      
       - name: Setup Node.js, bun, and opencode
         uses: actions/setup-node@v4
         with:
@@ -122,9 +125,10 @@ jobs:
       - run: npm install -g bun
       - run: curl -fsSL https://opencode.ai/install | bash
 
-      - name: OpenCode Autonomous LaTeX Fix and Compile Loop
+      - name: Run OpenCode
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
         run: |
           for i in {1..10}; do
             opencode run --model "${{ github.event.inputs.model_name }}" "$PROMPT" && break
@@ -156,8 +160,10 @@ jobs:
           name: workspace
           path: .
 
-      - name: Claude Code Autonomous Run, Fix, and Validate Loop
+      - name: Run Claude Code
         uses: anthropics/claude-code-action@v1
+        env:
+          WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: ${{ env.PROMPT }}
@@ -181,32 +187,21 @@ jobs:
           name: workspace-final
           path: .
 
-      - name: Move compiled PDF to .research/
-        run: |
-          src="${LATEX_DIR}/paper.pdf"
-          dest=".research/paper.pdf"
-          if [ -f "$src" ]; then
-            mv "$src" "$dest"
-            echo "Successfully moved compiled PDF to $dest"
-          else
-            echo "Warning: Compiled PDF not found at $src"
-            exit 1
-          fi
-
-      - name: Commit and push LaTeX outputs
+      - name: Commit and push evaluation results
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
-          git add .
+          git add "$RESULTS_DIR"
+          git add --update .
 
           if ! git diff --staged --quiet; then
-            git commit -m "[CI] Autonomous LaTeX fixes and compilation for ${{ github.event.inputs.subdir }}"
+            git commit -m "[CI] Commit evaluation results (iteration ${{ github.event.inputs.experiment_iteration }})"
             for i in {1..5}; do
-              git push && break
+              git pull --rebase && git push && break
               echo "Push failed on attempt $i. Retrying in $((2**i)) seconds..."
               sleep $((2**i))
             done
           else
-            echo "No changes were made by the agent."
+            echo "No changes were made by the agent or the evaluation."
           fi
