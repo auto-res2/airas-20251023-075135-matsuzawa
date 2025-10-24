@@ -45,11 +45,7 @@
       }
     }
   ],
-  "reference_research_study_list": [
-    {
-      "title": "Pattern recognition and machine learning"
-    }
-  ],
+  "reference_research_study_list": [],
   "new_method": {
     "method_iteration_id": 1,
     "design_iteration_id": 1,
