@@ -27,24 +27,26 @@ def _plot_learning_curve(path: Path, history: pd.DataFrame, run_id: str) -> str:
     plt.figure(figsize=(8, 5))
     has_data = False
 
-    # Filter out rows where Step is NaN (if Step column exists)
-    if "Step" in history.columns:
-        history = history.dropna(subset=["Step"])
+    # Check for step column (either "Step" or "_step")
+    step_col = "Step" if "Step" in history.columns else "_step" if "_step" in history.columns else None
+    
+    if step_col:
+        history = history.dropna(subset=[step_col])
 
         if "train_acc" in history.columns and not history["train_acc"].isna().all():
-            valid_data = history[["Step", "train_acc"]].dropna()
+            valid_data = history[[step_col, "train_acc"]].dropna()
             if len(valid_data) > 0:
-                plt.plot(valid_data["Step"], valid_data["train_acc"], label="Train Accuracy", linewidth=2.5, marker='o', markersize=4)
+                plt.plot(valid_data[step_col], valid_data["train_acc"], label="Train Accuracy", linewidth=2, marker='o', markersize=3)
                 has_data = True
         if "val_acc" in history.columns and not history["val_acc"].isna().all():
-            valid_data = history[["Step", "val_acc"]].dropna()
+            valid_data = history[[step_col, "val_acc"]].dropna()
             if len(valid_data) > 0:
-                plt.plot(valid_data["Step"], valid_data["val_acc"], label="Val Accuracy", linewidth=2.5, marker='s', markersize=4)
+                plt.plot(valid_data[step_col], valid_data["val_acc"], label="Val Accuracy", linewidth=2, marker='s', markersize=3)
                 has_data = True
         if "test_acc" in history.columns and not history["test_acc"].isna().all():
-            valid_data = history[["Step", "test_acc"]].dropna()
+            valid_data = history[[step_col, "test_acc"]].dropna()
             if len(valid_data) > 0:
-                plt.plot(valid_data["Step"], valid_data["test_acc"], label="Test Accuracy", linewidth=2.5, marker='^', markersize=4)
+                plt.plot(valid_data[step_col], valid_data["test_acc"], label="Test Accuracy", linewidth=2, marker='^', markersize=3)
                 has_data = True
     else:
         # If no Step column, use index as x-axis
@@ -137,9 +139,12 @@ def _bar_chart(path: Path, metric_dict: Dict[str, float], metric_name: str) -> s
     plt.grid(axis='y', alpha=0.3, linestyle='--')
     plt.tick_params(axis='y', labelsize=12)
 
-    # Set y-axis to start from 0 for accuracy, auto for relative improvement
+    # Set y-axis for better visibility of differences
     if metric_name == "accuracy":
-        plt.ylim(bottom=0, top=min(1.0, max(values) * 1.15))
+        # Zoom in on the data range for better visibility of differences
+        y_min = max(0, min(values) * 0.95)
+        y_max = min(1.0, max(values) * 1.05)
+        plt.ylim(bottom=y_min, top=y_max)
     else:
         # For relative improvement, add padding to y-axis
         y_range = max(values) - min(values)
@@ -181,9 +186,12 @@ def _box_plot(path: Path, metric_dict: Dict[str, float], metric_name: str) -> st
     plt.grid(axis='y', alpha=0.3, linestyle='--')
     plt.tick_params(axis='y', labelsize=12)
 
-    # Set y-axis to start from 0 for accuracy for consistency with bar chart
+    # Set y-axis for better visibility of differences
     if metric_name == "accuracy":
-        plt.ylim(bottom=0, top=1.0)
+        values_list = list(metric_dict.values())
+        y_min = min(values_list) * 0.95
+        y_max = max(values_list) * 1.05
+        plt.ylim(bottom=y_min, top=min(1.0, y_max))
 
     plt.tight_layout()
     fname = f"comparison_{metric_name}_boxplot.pdf"
@@ -281,13 +289,18 @@ def main() -> None:
     comp_dir = results_dir / "comparison"
     comp_dir.mkdir(parents=True, exist_ok=True)
 
-    # Determine baseline (first non-proposed or first run if none) -------
+    # Determine baseline (comparative or first run if none) -------
     baseline_id = None
     for rid in run_ids:
-        mtype = run_configs[rid].get("method", {}).get("type", "").lower()
-        if mtype in {"baseline", "comparative", "comparative-1", "comparative_1"}:
+        if "comparative" in rid.lower():
             baseline_id = rid
             break
+    if baseline_id is None:
+        for rid in run_ids:
+            mtype = run_configs[rid].get("method", {}).get("type", "").lower()
+            if mtype in {"baseline", "comparative", "comparative-1", "comparative_1"}:
+                baseline_id = rid
+                break
     if baseline_id is None:
         baseline_id = run_ids[0]
     baseline_value = per_run_metric[baseline_id]
